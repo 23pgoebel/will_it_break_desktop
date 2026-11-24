@@ -24,3 +24,8 @@
 - Asked: Add the expected-versus-app comparison table under a new Validation Results section in spec.md.
 - Changed: Added the validation model note and the two load cases' reaction and member-force comparison rows.
 - Worked: Yes; the requested table now appears below the validation problems.
+
+## 2026-11-24
+- Asked: Move Export results next to Test and hide the left build tools in Test mode.
+- Changed: Placed Export results in the top mode bar and made it available after a stable solve; the build-tools panel now hides in Test mode and returns in Build mode.
+- Worked: Yes; the requested layout and mode behavior are implemented.

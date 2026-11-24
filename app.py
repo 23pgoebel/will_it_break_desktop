@@ -133,6 +133,9 @@ class BridgeApp:
         for mode in ("Build", "Test"):
             b = tk.Button(modebar, text=mode, command=lambda m=mode: self.set_mode(m), takefocus=True, padx=15, pady=7)
             b.pack(side="left", padx=2); self.mode_buttons[mode] = b
+        self.export_button = tk.Button(modebar, text="Export results", command=self.export_results,
+            state="disabled", takefocus=True, padx=12, pady=7, fg=BLUE, bg="white")
+        self.export_button.pack(side="left", padx=(8, 4))
         work = tk.Frame(self.root, bg="#eef2f4"); work.pack(fill="both", expand=True, padx=12, pady=12)
         work.columnconfigure(1, weight=1); work.rowconfigure(0, weight=1)
         self.tools = self._panel(work, 0, "BUILD TOOLS", 160)
@@ -157,7 +160,6 @@ class BridgeApp:
         head = tk.Frame(self.details, bg="white"); head.pack(fill="x")
         self.details_button = tk.Button(head, text="Open details", command=self.toggle_details, fg=BLUE, bg="white", relief="flat", padx=12, pady=9, takefocus=True)
         self.details_button.pack(side="left")
-        tk.Button(head, text="Export results", command=self.export_results, fg=BLUE, bg="white", relief="flat", padx=12, pady=9, takefocus=True).pack(side="right")
         tk.Label(head, text="Separate reaction and member force tables · + tension / − compression", bg="white", fg=MUTED).pack(side="left")
         content = tk.Frame(self.details, bg="white"); self.detail_content = content
         self.reaction_tree = self._tree(content, "JOINT REACTIONS"); self.member_tree = self._tree(content, "MEMBER FORCES")
@@ -245,9 +247,11 @@ class BridgeApp:
         for key, button in self.mode_buttons.items():
             button.configure(bg=BLUE if key == mode else "#f7f9fb", fg="white" if key == mode else MUTED)
         if mode == "Test":
+            self.tools.grid_remove()
             self.controls.grid(); self.tool = ""; self.first_joint = None
             self.hint.set("Test mode: park a vehicle or drive it across the bridge.")
         else:
+            self.tools.grid()
             self.controls.grid_remove(); self.banner.pack_forget(); self.tool = "member"; self.first_joint = None
             self.hint.set("Build mode: click two grid points to add a member.")
         self._draw(); self._update_stats()
@@ -374,6 +378,7 @@ class BridgeApp:
     def _update_stats(self):
         self.last_result = None
         self.max_forces = []
+        self.export_button.configure(state="disabled")
         count, members = len(self.nodes), len(self.members)
         difference = members + 3 - 2*count
         self.cost.set(f"${count*500+sum(m.length for m in self.members)*100:,.0f}")
@@ -525,6 +530,7 @@ class BridgeApp:
             self.hint.set("Validation load cases are static; use Park to solve this load situation.")
             return
         self._stop_drive(); self.driving=True; self.drive_front=0.0; self.position.set(0); self.max_forces=[None]*len(self.members); self.crossing_result=True
+        self.last_result=None; self.export_button.configure(state="disabled")
         self.pause_button.configure(state="normal",text="Pause"); self.drive_button.configure(state="disabled")
         self.banner.pack_forget(); self._drive_step()
 
@@ -539,6 +545,7 @@ class BridgeApp:
             capacity=90000 if force>=0 else 75000
             if abs(force)>capacity: failed=(i,force); break
         self._draw(); self._details(result,crossing=True)
+        self.export_button.configure(state="normal")
         if failed:
             self._stop_drive(); i,force=failed
             self._show_result(True,f"Your Bridge Failed · Member {i+1} reached {abs(force):,.0f} lb."); return
