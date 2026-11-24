@@ -19,3 +19,8 @@
 - Asked: Add Save/Open and Export results to the spec, build both features, run the added validation problems, and compare expected and app results.
 - Changed: Added the Added Features spec section; implemented JSON project Save/Open, editable deflection-limit metadata, CSV results export, and selectable static validation load cases. Clarified the Pratt validation member panel.
 - Worked: Both validation cases ran through the app solver on the specified Pratt truss and matched all listed reactions and member forces. The GUI file-dialog flows were not manually exercised.
+
+## 2026-11-24
+- Asked: Add the expected-versus-app comparison table under a new Validation Results section in spec.md.
+- Changed: Added the validation model note and the two load cases' reaction and member-force comparison rows.
+- Worked: Yes; the requested table now appears below the validation problems.
