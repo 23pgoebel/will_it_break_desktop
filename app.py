@@ -1,9 +1,11 @@
 from __future__ import annotations
 import copy
+import csv
+import json
 import math
 import tkinter as tk
 from dataclasses import dataclass
-from tkinter import ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 TITLE = "Will it Break?"
 INK, MUTED, LINE, GRID, BLUE, WOOD, DECK = "#17212b", "#61717f", "#d7dfe5", "#dbe3e8", "#285c87", "#8a5a36", "#9a7b57"
@@ -12,6 +14,10 @@ VEHICLES = {
     "Loaded Dump Truck": {"axles": [(0, 12000), (14, 17000), (18.5, 17000)], "color": "#bd642f", "kind": "dump"},
     "Semi": {"axles": [(0, 8000), (14, 32000), (28, 32000)], "color": "#4e6f93", "kind": "semi"},
     "Fire Engine": {"axles": [(0, 20000), (17, 27000), (21.5, 27000)], "color": "#c74343", "kind": "fire"},
+}
+VALIDATION_CASES = {
+    "Problem 1 - Heavy Transport": [(10.0, 20000.0), (25.0, 40000.0), (50.0, 30000.0)],
+    "Problem 2 - Asymmetric Traffic": [(10.0, 15000.0), (20.0, 25000.0), (30.0, 35000.0), (40.0, 10000.0)],
 }
 DECK_NODES = [(float(x), 0.0) for x in range(0, 61, 10)]
 
@@ -60,8 +66,11 @@ def solve_truss(nodes, members, front_x, vehicle_name):
     ni = {node: i for i, node in enumerate(nodes)}
     matrix = [[0.0] * unknowns for _ in range(unknowns)]
     rhs = [0.0] * unknowns
-    for offset, load in VEHICLES[vehicle_name]["axles"]:
-        x = front_x - offset
+    if vehicle_name in VALIDATION_CASES:
+        applied_loads = VALIDATION_CASES[vehicle_name]
+    else:
+        applied_loads = [(front_x-offset, load) for offset, load in VEHICLES[vehicle_name]["axles"]]
+    for x, load in applied_loads:
         if not 0 <= x <= 60: continue
         left_i = min(5, int(x // 10))
         left, fraction = left_i * 10.0, (x - left_i * 10.0) / 10.0
@@ -97,13 +106,25 @@ class BridgeApp:
         self.hint = tk.StringVar(value="Build mode: click two grid points to add a member.")
         self.cost, self.joint_count, self.member_count = tk.StringVar(), tk.StringVar(), tk.StringVar()
         self.status, self.count_hint = tk.StringVar(), tk.StringVar()
-        self.last_result = None; self.max_forces = []; self.drive_after = None; self.paused = False; self.driving = False; self.drive_front = 0.0
+        self.last_result = None; self.max_forces = []; self.crossing_result = False; self.drive_after = None; self.paused = False; self.driving = False; self.drive_front = 0.0
+        self.project_path = None; self.support_type = "Pin and roller"; self.span_ft = 60.0
+        self.section = "Uniform truss members"; self.deflection_limit_ft = None
         self._build_ui(); self._update_stats(); self._draw()
         root.bind("<Control-z>", lambda _e: self.undo()); root.bind("<Escape>", lambda _e: self.detach())
         root.bind("<Key-a>", lambda _e: self.set_tool("member")); root.bind("<Key-e>", lambda _e: self.set_tool("erase"))
         root.bind("<Key-d>", lambda _e: self.set_tool("drag")); root.bind("<Left>", lambda _e: self.step(-.5)); root.bind("<Right>", lambda _e: self.step(.5))
 
     def _build_ui(self):
+        menubar = tk.Menu(self.root)
+        file_menu = tk.Menu(menubar, tearoff=False)
+        file_menu.add_command(label="Save", accelerator="Ctrl+S", command=self.save_project)
+        file_menu.add_command(label="Open...", accelerator="Ctrl+O", command=self.open_project)
+        file_menu.add_separator()
+        file_menu.add_command(label="Set deflection limit...", command=self.set_deflection_limit)
+        menubar.add_cascade(label="File", menu=file_menu)
+        self.root.configure(menu=menubar)
+        self.root.bind("<Control-s>", lambda _e: self.save_project())
+        self.root.bind("<Control-o>", lambda _e: self.open_project())
         top = tk.Frame(self.root, bg="white", highlightbackground=LINE, highlightthickness=1); top.pack(fill="x")
         tk.Label(top, text=TITLE, bg="white", fg=INK, font=("Segoe UI", 18, "bold")).pack(side="left", padx=18, pady=12)
         tk.Label(top, text="2D BRIDGE DESIGN SIMULATOR", bg="white", fg=MUTED, font=("Segoe UI", 9, "bold")).pack(side="left")
@@ -136,6 +157,7 @@ class BridgeApp:
         head = tk.Frame(self.details, bg="white"); head.pack(fill="x")
         self.details_button = tk.Button(head, text="Open details", command=self.toggle_details, fg=BLUE, bg="white", relief="flat", padx=12, pady=9, takefocus=True)
         self.details_button.pack(side="left")
+        tk.Button(head, text="Export results", command=self.export_results, fg=BLUE, bg="white", relief="flat", padx=12, pady=9, takefocus=True).pack(side="right")
         tk.Label(head, text="Separate reaction and member force tables · + tension / − compression", bg="white", fg=MUTED).pack(side="left")
         content = tk.Frame(self.details, bg="white"); self.detail_content = content
         self.reaction_tree = self._tree(content, "JOINT REACTIONS"); self.member_tree = self._tree(content, "MEMBER FORCES")
@@ -166,8 +188,8 @@ class BridgeApp:
 
     def _test_controls(self):
         left = tk.Frame(self.controls, bg="#f7f9fb"); left.pack(side="left", padx=(0, 10))
-        tk.Label(left, text="VEHICLE", bg="#f7f9fb", fg=MUTED, font=("Segoe UI", 8, "bold")).pack(anchor="w")
-        combo = ttk.Combobox(left, values=list(VEHICLES), textvariable=self.vehicle, state="readonly", width=18)
+        tk.Label(left, text="VEHICLE / LOAD CASE", bg="#f7f9fb", fg=MUTED, font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        combo = ttk.Combobox(left, values=list(VEHICLES)+list(VALIDATION_CASES), textvariable=self.vehicle, state="readonly", width=24)
         combo.pack(pady=3); combo.bind("<<ComboboxSelected>>", lambda _e: self.park())
         pos = tk.Frame(self.controls, bg="#f7f9fb"); pos.pack(side="left", padx=6)
         tk.Label(pos, text="FRONT AXLE (FT)", bg="#f7f9fb", fg=MUTED, font=("Segoe UI", 8, "bold")).pack(anchor="w")
@@ -417,6 +439,14 @@ class BridgeApp:
         if self.mode=="Test": self._draw_vehicle()
 
     def _draw_vehicle(self):
+        if self.vehicle.get() in VALIDATION_CASES:
+            for x, load in VALIDATION_CASES[self.vehicle.get()]:
+                px, deck_y = self._xy((x, 0.0))
+                top_y = self._xy((x, 3.0))[1]
+                self.canvas.create_line(px, top_y, px, deck_y-5, fill="#c74343", width=3, arrow="last")
+                self.canvas.create_text(px, top_y-10, text=f"{load:,.0f} lb", fill="#7a2525", font=("Segoe UI", 8, "bold"))
+            self.canvas.create_text(12, 14, anchor="nw", text=self.vehicle.get(), fill=INK, font=("Segoe UI", 9, "bold"))
+            return
         spec = VEHICLES[self.vehicle.get()]
         front = self.drive_front if self.driving else float(self.position.get())
         axles = [front-offset for offset, _load in spec["axles"]]
@@ -467,10 +497,15 @@ class BridgeApp:
         self.position.set(max(0,min(60,round((value+amount)*2)/2))); self._position_changed()
 
     def park(self):
+        self._stop_drive()
+        self.crossing_result=False
         self._position_changed(); result=solve_truss(sorted(self.nodes),self.members,float(self.position.get()),self.vehicle.get())
         self.last_result=result; self._draw(); self._details(result)
         if result.stable:
-            self.hint.set(f"Parked load solved at front axle x = {self.position.get():g} ft.")
+            if self.vehicle.get() in VALIDATION_CASES:
+                self.hint.set(f"Solved static load case: {self.vehicle.get()}.")
+            else:
+                self.hint.set(f"Parked load solved at front axle x = {self.position.get():g} ft.")
         else: self.hint.set(result.message)
 
     def _details(self, result, crossing=False):
@@ -486,7 +521,10 @@ class BridgeApp:
 
     def start_drive(self):
         if self.mode!="Test": return
-        self._stop_drive(); self.driving=True; self.drive_front=0.0; self.position.set(0); self.max_forces=[None]*len(self.members)
+        if self.vehicle.get() in VALIDATION_CASES:
+            self.hint.set("Validation load cases are static; use Park to solve this load situation.")
+            return
+        self._stop_drive(); self.driving=True; self.drive_front=0.0; self.position.set(0); self.max_forces=[None]*len(self.members); self.crossing_result=True
         self.pause_button.configure(state="normal",text="Pause"); self.drive_button.configure(state="disabled")
         self.banner.pack_forget(); self._drive_step()
 
@@ -542,6 +580,109 @@ class BridgeApp:
     def _another(self):
         self.banner.pack_forget(); self.position.set(44); self.set_mode("Test")
         self.hint.set("Choose another vehicle or adjust the front axle position.")
+
+
+    def set_deflection_limit(self):
+        initial = "" if self.deflection_limit_ft is None else str(self.deflection_limit_ft)
+        value = simpledialog.askstring("Deflection limit", "Maximum deflection in feet (leave blank to clear):",
+                                       initialvalue=initial, parent=self.root)
+        if value is None: return
+        if not value.strip():
+            self.deflection_limit_ft = None
+        else:
+            try: number = float(value)
+            except ValueError:
+                messagebox.showerror("Invalid limit", "Enter a number in feet or leave the field blank.", parent=self.root); return
+            if not math.isfinite(number) or number < 0:
+                messagebox.showerror("Invalid limit", "The deflection limit must be a finite non-negative number.", parent=self.root); return
+            self.deflection_limit_ft = number
+        self.hint.set("Deflection limit saved in project settings; the truss solver does not calculate deflection.")
+
+    def _current_loads(self):
+        if self.vehicle.get() in VALIDATION_CASES:
+            source = VALIDATION_CASES[self.vehicle.get()]
+        else:
+            front = float(self.position.get())
+            source = [(front-offset, load) for offset, load in VEHICLES[self.vehicle.get()]["axles"]]
+        return [{"x_ft": float(x), "load_lb": float(load)} for x, load in source]
+
+    def save_project(self):
+        path = self.project_path
+        if not path:
+            path = filedialog.asksaveasfilename(parent=self.root, title="Save bridge project",
+                defaultextension=".wib.json", filetypes=(("Will it Break project", "*.wib.json"), ("JSON files", "*.json")))
+            if not path: return
+        document = {
+            "format": "will-it-break-project", "version": 1,
+            "beam": {"support_type": self.support_type, "span_ft": self.span_ft,
+                     "section": self.section, "deflection_limit_ft": self.deflection_limit_ft,
+                     "load_situation": self.vehicle.get(), "front_axle_x_ft": float(self.position.get()), "mode": self.mode,
+                     "loads": self._current_loads()},
+            "bridge": {"nodes": [list(n) for n in sorted(self.nodes)],
+                       "members": [{"a": list(m.a), "b": list(m.b), "deck": m.deck} for m in self.members]},
+        }
+        try:
+            with open(path, "w", encoding="utf-8") as stream: json.dump(document, stream, indent=2)
+            self.project_path = path
+            self.hint.set(f"Project saved to {path}.")
+        except OSError as error:
+            messagebox.showerror("Save failed", str(error), parent=self.root)
+
+    def open_project(self):
+        path = filedialog.askopenfilename(parent=self.root, title="Open bridge project",
+            filetypes=(("Will it Break project", "*.wib.json"), ("JSON files", "*.json"), ("All files", "*.*")))
+        if not path: return
+        try:
+            with open(path, "r", encoding="utf-8") as stream: document = json.load(stream)
+            if document.get("format") != "will-it-break-project" or document.get("version") != 1:
+                raise ValueError("This is not a supported Will it Break project file.")
+            beam, bridge = document["beam"], document["bridge"]
+            if beam["support_type"] != self.support_type or float(beam["span_ft"]) != self.span_ft or beam["section"] != self.section:
+                raise ValueError("This project uses support, span, or section settings that this app does not support.")
+            nodes = {tuple(map(float, pair)) for pair in bridge["nodes"]}
+            members = [Member(tuple(map(float, item["a"])), tuple(map(float, item["b"])), bool(item.get("deck", False)))
+                       for item in bridge["members"]]
+            if not set(DECK_NODES).issubset(nodes) or any(m.a not in nodes or m.b not in nodes for m in members):
+                raise ValueError("The project has invalid joints or member endpoints.")
+            load_situation = beam["load_situation"]
+            if load_situation not in VEHICLES and load_situation not in VALIDATION_CASES:
+                raise ValueError("The project uses an unknown load situation.")
+            limit = beam.get("deflection_limit_ft")
+            if limit is not None and (not math.isfinite(float(limit)) or float(limit) < 0):
+                raise ValueError("The project's deflection limit is invalid.")
+            position = max(0.0, min(60.0, float(beam.get("front_axle_x_ft", 44.0))))
+            mode = beam.get("mode", "Build")
+            if mode not in ("Build", "Test"): raise ValueError("The project mode is invalid.")
+            if load_situation in VALIDATION_CASES: mode = "Test"
+        except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
+            messagebox.showerror("Open failed", str(error), parent=self.root); return
+        self._stop_drive(); self.nodes, self.members = nodes, members
+        self.vehicle.set(load_situation); self.position.set(position)
+        self.deflection_limit_ft = None if limit is None else float(limit); self.project_path = path
+        self.set_mode(mode)
+        self._update_stats(); self._draw()
+        self.hint.set(f"Project opened from {path}.")
+
+    def export_results(self):
+        if not self.last_result or not self.last_result.stable:
+            messagebox.showinfo("No results", "Park or drive a stable load situation before exporting results.", parent=self.root); return
+        path = filedialog.asksaveasfilename(parent=self.root, title="Export calculation results",
+            defaultextension=".csv", filetypes=(("CSV files", "*.csv"), ("All files", "*.*")))
+        if not path: return
+        forces = self.max_forces if self.crossing_result and self.max_forces else self.last_result.forces
+        loads = self._current_loads()
+        try:
+            with open(path, "w", newline="", encoding="utf-8-sig") as stream:
+                writer = csv.writer(stream)
+                writer.writerow(["Load situation", self.vehicle.get()])
+                writer.writerow(["Applied loads (x ft, lb)", "; ".join(f"{v['x_ft']:g}, {v['load_lb']:g}" for v in loads)])
+                writer.writerow(["Category", "Item", "Force (lb)"])
+                for name, value in self.last_result.reactions.items(): writer.writerow(["Reaction", name, value])
+                for index, value in enumerate(forces or [], 1):
+                    if value is not None: writer.writerow(["Member force", f"Member {index}", value])
+            self.hint.set(f"Results exported to {path}.")
+        except OSError as error:
+            messagebox.showerror("Export failed", str(error), parent=self.root)
 
 
 def main():

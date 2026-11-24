@@ -14,3 +14,8 @@
 - Asked: Add a Platform section to spec.md and include two additional validation problems.
 - Changed: Documented Python/Tkinter runtime and intended Windows, macOS, and Linux desktop support; added both load cases with expected reactions and member forces.
 - Worked: Yes; both requested spec updates are present.
+
+## 2026-11-24
+- Asked: Add Save/Open and Export results to the spec, build both features, run the added validation problems, and compare expected and app results.
+- Changed: Added the Added Features spec section; implemented JSON project Save/Open, editable deflection-limit metadata, CSV results export, and selectable static validation load cases. Clarified the Pratt validation member panel.
+- Worked: Both validation cases ran through the app solver on the specified Pratt truss and matched all listed reactions and member forces. The GUI file-dialog flows were not manually exercised.

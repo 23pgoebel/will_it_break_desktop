@@ -96,6 +96,8 @@ The answer should be:
 
 ### Additional validation problems
 
+For both problems, use the 60 ft, 10 ft tall, six-panel Pratt reference truss described above. Report top chord, bottom chord, and diagonal forces in the panel from x = 20 to 30 ft.
+
 #### Problem 1 - Heavy Transport
 
 - Applied loads: 20,000 lb at x = 10 ft; 40,000 lb at x = 25 ft; 30,000 lb at x = 50 ft.
@@ -127,6 +129,15 @@ The answer should be:
 
 
 
+
+## Added Features
+
+### Save and Open
+- The File menu provides Save and Open for project files. Save stores the bridge design and the beam/project parameters: support type, span, section, deflection limit, and loads. Open restores them from the file.
+- Project files retain the current bridge joints and members, selected load situation, and vehicle position. The current app uses the fixed pin-and-roller supports and 60 ft span, with uniform bridge members; the deflection limit is project metadata and is not currently calculated by the truss solver.
+
+### Export results
+- An Export results button saves a table of calculations for the currently selected and solved load situation, including support reactions and signed member forces.
 
 ## Build stages
 
