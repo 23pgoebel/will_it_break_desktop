@@ -7,6 +7,10 @@
 - The app distributes axle loads to deck joints, solves the truss, and updates member colors from brown through yellow and red to black as a member approaches or exceeds its tension or compression capacity.
 - It includes a closed-by-default details panel for reactions and signed member forces, a failure state that preserves the bridge and offers Restart, and a success state that allows another vehicle to be tested.
 
+## Platform
+- This is a native desktop application launched from `app.py` with Python 3.10 or newer and Tkinter/Tk; it does not require a web browser or third-party Python packages.
+- The app is intended to run on Windows, macOS, and Linux desktop systems that provide a graphical session and a Tk installation. On Linux, install the distribution's Tkinter package (commonly `python3-tk`) if it is not included with Python.
+
 ## Purpose
 - The app will allow users to design and build a a cost effective 2D virtual bridge and drive various vehicles across it. The app will show the cost of the bridge, the stress in each member through color as the vehicles drive across, and a message if the bridge exceeds the allowable stresses.
 
@@ -89,6 +93,24 @@ The answer should be:
 - Bottom chord in the 20–30 ft panel: 70,380.8 lb tension
 - Diagonal in the 20–30 ft panel: 13,590.03 lb tension
 - Equilibrium check: pin and roller reactions sum to 72,000 lb, equal to the three on-bridge Semi axle loads.
+
+### Additional validation problems
+
+#### Problem 1 - Heavy Transport
+
+- Applied loads: 20,000 lb at x = 10 ft; 40,000 lb at x = 25 ft; 30,000 lb at x = 50 ft.
+- Support reactions: A = 45,000 lb upward; G = 45,000 lb upward.
+- Top chord: 75,000.00 lb compression.
+- Bottom chord: 70,000.00 lb tension.
+- Diagonal: 7,071.07 lb tension.
+
+#### Problem 2 - Asymmetric Traffic
+
+- Applied loads: 15,000 lb at x = 10 ft; 25,000 lb at x = 20 ft; 35,000 lb at x = 30 ft; 10,000 lb at x = 40 ft.
+- Support reactions: A = 50,000 lb upward; G = 35,000 lb upward.
+- Top chord: 95,000.00 lb compression.
+- Bottom chord: 85,000.00 lb tension.
+- Diagonal: 14,142.14 lb tension.
 
 ## Out of scope
 - The app will not have any 3D elements
