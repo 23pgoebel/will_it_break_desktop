@@ -54,3 +54,8 @@
 - Asked: Rerun the validation problems and add expected-versus-actual values under New Validation Results in spec.md.
 - Changed: Reran both cases through the app solver on the reference truss and added a ten-row comparison table.
 - Worked: Yes; all reactions and member forces matched the expected values to the displayed precision.
+
+## 2026-11-24
+- Asked: Double-check that New Validation Results exists in spec.md and add it if missing.
+- Changed: Confirmed the section was missing from the current spec and restored the expected-versus-actual table before Out of scope, preserving other existing spec edits.
+- Worked: Yes; New Validation Results is present with both problems' results.

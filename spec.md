@@ -94,9 +94,7 @@ The answer should be:
 - Diagonal in the 20–30 ft panel: 13,590.03 lb tension
 - Equilibrium check: pin and roller reactions sum to 72,000 lb, equal to the three on-bridge Semi axle loads.
 
-### Additional validation problems
-
-For both problems, use the 60 ft, 10 ft tall, six-panel Pratt reference truss described above. Report top chord, bottom chord, and diagonal forces in the panel from x = 20 to 30 ft.
+### Additional validation problems from Sourced from Gemini
 
 #### Problem 1 - Heavy Transport
 
@@ -113,17 +111,6 @@ For both problems, use the 60 ft, 10 ft tall, six-panel Pratt reference truss de
 - Top chord: 95,000.00 lb compression.
 - Bottom chord: 85,000.00 lb tension.
 - Diagonal: 14,142.14 lb tension.
-
-### Validation Results
-
-The app solver results below were run on the 60 ft, 10 ft tall, six-panel Pratt reference truss, using members in the x = 20 to 30 ft panel. App forces are signed: negative is compression and positive is tension.
-
-| Problem | Result | Reactions A / G | Top chord | Bottom chord | Diagonal |
-|---|---|---:|---:|---:|---:|
-| Heavy Transport | Expected | 45,000 / 45,000 lb | 75,000 lb compression | 70,000 lb tension | 7,071.07 lb tension |
-| Heavy Transport | App | 45,000 / 45,000 lb | -75,000 lb | +70,000 lb | +7,071.07 lb |
-| Asymmetric Traffic | Expected | 50,000 / 35,000 lb | 95,000 lb compression | 85,000 lb tension | 14,142.14 lb tension |
-| Asymmetric Traffic | App | 50,000 / 35,000 lb | -95,000 lb | +85,000 lb | +14,142.14 lb |
 
 ### New Validation Results
 
@@ -151,6 +138,7 @@ Both problems were rerun with the app solver on the 60 ft, 10 ft tall, six-panel
 - Snap to feature that makes it easier to connect members by automatically merging joints that were placed within a few feet of each other
 - Changed colors so that yellow and red mean compression while green and blue mean tension
 - Added an undo, delete all, and drag joint buttons
+- Added banks beneath each end of the bridge
 
 
 
