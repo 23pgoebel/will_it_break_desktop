@@ -1,6 +1,7 @@
 # Will it Break?
 
 ## Overview
+- The product is a Python desktop application built with Tkinter.
 - “Will it Break?” is a 2D bridge-design simulator on a 60 ft by 25 ft grid.
 - Users place joints and members in Build mode, view the live bridge cost and stability status, and use Test mode to drive or park one of four vehicles across the bridge.
 - The app distributes axle loads to deck joints, solves the truss, and updates member colors from brown through yellow and red to black as a member approaches or exceeds its tension or compression capacity.
@@ -59,7 +60,7 @@
 - All controls and status messages have keyboard-accessible alternatives, visible focus states, and text descriptions for screen readers.
 
 ## Look and feel
-- The app opens in Build mode with the 60 ft by 25 ft grid, bridge deck, 10 ft deck joints, pin support, roller support, and roads on both sides already displayed. The interface is a clean engineering dashboard with the grid in the center, build tools in a compact left panel, cost and status readouts in a right panel, and the details panel below or in a drawer.
+- The app opens in a native desktop window in Build mode with the 60 ft by 25 ft grid, bridge deck, 10 ft deck joints, pin support, roller support, and roads on both sides already displayed. The interface is a clean engineering dashboard built with Tkinter widgets and a Tkinter Canvas: the grid is centered, build tools sit in a compact left panel, cost and status readouts sit in a right panel, and the details panel appears below or in a drawer.
 - The grid uses light lines, while deck lines, supports, joints, and members use stronger, clearly different lines.
 - Build tools use consistent icons paired with text labels or tooltips. The cursor and selected tool visibly indicate placement, member connection, erasing, or joint dragging.
 - Normal joints appear as small white circles with black outlines. Fixed supports have distinct pin and roller markers. Hovered or selected joints use a clearly visible highlight.
@@ -69,7 +70,7 @@
 - The 2D side-view vehicles show two wheels and use scaled dimensions and proportional axle spacing when possible.
 - Vehicle motion is smooth and readable. Test mode provides visible Pause/Resume and Park controls.
 - Success and failure states use clear banners or dialogs with restrained animation. Failure includes "Your Bridge Failed", the failed member, and a Restart button that returns to Build mode while preserving the bridge.
-- The layout keeps the grid responsive and scales the canvas on smaller screens while preserving accessible controls and status readouts.
+- The window can be resized; the Tkinter Canvas scales the grid while keeping controls and status readouts usable.
 - Normal status hints are brief and unobtrusive. Controls and status messages do not rely on color alone, have keyboard alternatives, visible focus states, and text descriptions for screen readers.
 
 ## Validation
@@ -107,9 +108,9 @@ The answer should be:
 
 ## Build stages
 
-### 1. Page-layout mockup
-- Build a static HTML/CSS mockup of the grid, deck joints, pin and roller supports, road sections, tool panel, cost/status panel, details drawer, and Test mode controls.
-- Check that the layout is readable, the main grid is prominent, smaller screens remain usable, and controls are clearly separated from the canvas.
+### 1. Tkinter window layout
+- Build the desktop window with Tkinter widgets and a Tkinter Canvas for the grid, deck joints, pin and roller supports, road sections, tool panel, cost/status panel, details drawer, and Test mode controls.
+- Check that the layout is readable, the main grid is prominent when the window is resized, and controls are clearly separated from the canvas.
 
 ### 2. Build-mode editing
 - Build joint placement, member drawing, member erasing, whole-bridge clearing, joint dragging, cursor hints, duplicate-member prevention, proposed-member length hints, live cost, joint/member counts, and stability status.
