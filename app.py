@@ -482,11 +482,21 @@ class BridgeApp:
             self.canvas.create_rectangle(xr-1.4*scale, top+.8*scale, xr-.3*scale, top+1.5*scale,
                 fill="#dcebf2", outline=INK)
             self.canvas.create_line(xl+.5*scale, top, xr-.4*scale, top, fill="#f1d567", width=4)
-        radius = max(4, .32*scale)
+        radius = max(7, .55*scale)
         for axle in sorted(set(axles)):
             if -5 <= axle <= 90:
-                wx, wy = self._xy((axle, 0))
-                self.canvas.create_oval(wx-radius, wy-radius, wx+radius, wy+radius, fill="#26323b", outline="white")
+                wx, deck_y = self._xy((axle, 0))
+                cy = deck_y-radius
+                self.canvas.create_oval(wx-radius, cy-radius, wx+radius, cy+radius,
+                    fill="#202a31", outline="#10171c", width=2)
+                rim = radius*.68
+                self.canvas.create_oval(wx-rim, cy-rim, wx+rim, cy+rim,
+                    fill="#bcc7ce", outline="#edf1f3", width=2)
+                hub = radius*.34
+                self.canvas.create_oval(wx-hub, cy-hub, wx+hub, cy+hub,
+                    fill="#566773", outline="#26323b", width=1)
+                pin = max(1.5, radius*.08)
+                self.canvas.create_oval(wx-pin, cy-pin, wx+pin, cy+pin, fill="#e5ebee", outline="")
         self.canvas.create_text((xl+xr)/2, top-.7*scale,
             text=f"{self.vehicle.get()} ? front axle x={front:.1f} ft", fill=INK, font=("Segoe UI", 9, "bold"))
 

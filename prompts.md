@@ -29,3 +29,8 @@
 - Asked: Move Export results next to Test and hide the left build tools in Test mode.
 - Changed: Placed Export results in the top mode bar and made it available after a stable solve; the build-tools panel now hides in Test mode and returns in Build mode.
 - Worked: Yes; the requested layout and mode behavior are implemented.
+
+## 2026-11-24
+- Asked: Make the axle-load graphics bigger and make them look like wheels.
+- Changed: Enlarged the axle wheel markers and added layered tire, rim, hub, and center details.
+- Worked: Yes; axle markers now render as larger detailed wheels in the vehicle graphic.
