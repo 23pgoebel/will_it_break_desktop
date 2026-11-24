@@ -479,30 +479,50 @@ class BridgeApp:
         left, right = rear-1.5, front+2.0
         xl, deck_y = self._xy((left, 0)); xr, _ = self._xy((right, 0))
         scale = self._metrics()[2]; top = deck_y-2.8*scale; color = spec["color"]
+        body_top = deck_y-.65*scale
         if spec["kind"] == "car":
-            self.canvas.create_polygon(xl, deck_y-.7*scale, xl+1.1*scale, top+.5*scale,
-                xl+3.0*scale, top, xr-1.0*scale, top+.2*scale, xr, deck_y-.7*scale,
-                fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(xl, top+1.45*scale, xr, body_top, fill=color, outline=INK, width=2)
+            self.canvas.create_polygon(xl+1.4*scale, top+1.45*scale, xl+3.5*scale, top+.15*scale,
+                xl+6.5*scale, top+1.45*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(xl+3.2*scale, top+.85*scale, xl+5.5*scale, top+1.35*scale,
+                fill="#dcebf2", outline=INK)
         elif spec["kind"] == "semi":
             cab = self._xy((front-5, 0))[0]
-            self.canvas.create_rectangle(xl, top+.25*scale, cab-.3*scale, deck_y-.7*scale,
-                fill="#e5e8eb", outline=INK, width=2)
-            self.canvas.create_polygon(cab, top+1.2*scale, cab+.9*scale, top+.2*scale,
-                xr-.2*scale, top+.2*scale, xr, top+1.2*scale, xr, deck_y-.7*scale,
-                cab, deck_y-.7*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(xl, top+.25*scale, cab-.3*scale, body_top, fill="#e5e8eb", outline=INK, width=2)
+            self.canvas.create_rectangle(cab, top+1.05*scale, xr, body_top, fill=color, outline=INK, width=2)
+            self.canvas.create_polygon(cab, top+1.05*scale, cab+1.0*scale, top+.15*scale,
+                xr-1.0*scale, top+1.05*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_polygon(xr-1.0*scale, top+.15*scale, xr, top+1.05*scale,
+                xr-1.0*scale, top+1.05*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(cab+1.2*scale, top+.45*scale, xr-1.5*scale, top+.9*scale,
+                fill="#dcebf2", outline=INK)
         elif spec["kind"] == "dump":
             cab = self._xy((front-5, 0))[0]
-            self.canvas.create_polygon(xl+.3*scale, top+1.2*scale, cab-.4*scale, top+.2*scale,
-                cab, top+.4*scale, cab, deck_y-.7*scale, xl+.3*scale, deck_y-.7*scale,
+            self.canvas.create_rectangle(xl+.2*scale, top+.4*scale, cab-.3*scale, body_top,
                 fill="#bc8d48", outline=INK, width=2)
-            self.canvas.create_rectangle(cab, top+1.0*scale, xr, deck_y-.7*scale,
-                fill=color, outline=INK, width=2)
-        else:
-            self.canvas.create_rectangle(xl, top+.3*scale, xr, deck_y-.7*scale, fill=color, outline=INK, width=2)
-            self.canvas.create_rectangle(xr-1.4*scale, top+.8*scale, xr-.3*scale, top+1.5*scale,
+            self.canvas.create_rectangle(cab, top+1.0*scale, xr, body_top, fill=color, outline=INK, width=2)
+            self.canvas.create_polygon(cab, top+1.0*scale, cab+1.0*scale, top+.15*scale,
+                xr-1.0*scale, top+1.0*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_polygon(xr-1.0*scale, top+.15*scale, xr, top+1.0*scale,
+                xr-1.0*scale, top+1.0*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(cab+1.2*scale, top+.35*scale, xr-1.5*scale, top+.8*scale,
                 fill="#dcebf2", outline=INK)
-            self.canvas.create_line(xl+.5*scale, top, xr-.4*scale, top, fill="#f1d567", width=4)
-        radius = max(7, .55*scale)
+        else:
+            cab = self._xy((front-5, 0))[0]
+            self.canvas.create_rectangle(xl, top+.45*scale, xr, body_top, fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(cab, top+.35*scale, xr-1.0*scale, body_top,
+                fill="#d94848", outline=INK, width=2)
+            self.canvas.create_polygon(xr-1.0*scale, top+.75*scale, xr-.35*scale, top+.15*scale,
+                xr, top+.75*scale, fill=color, outline=INK, width=2)
+            self.canvas.create_rectangle(xr-1.3*scale, top+.9*scale, xr-.4*scale, top+1.4*scale,
+                fill="#dcebf2", outline=INK)
+            self.canvas.create_rectangle(xl+.5*scale, top+.05*scale, xr-1.2*scale, top+.35*scale,
+                fill="#f1d567", outline=INK, width=1)
+            for rung in range(1, 5):
+                rx = xl+(.5+rung*(max(1.0,(right-left-1.7)/5)))*scale
+                self.canvas.create_rectangle(rx, top+.05*scale, rx+.08*scale, top+.35*scale,
+                    fill=INK, outline=INK)
+        radius = max(10, .78*scale)
         for axle in sorted(set(axles)):
             if -5 <= axle <= 90:
                 wx, deck_y = self._xy((axle, 0))

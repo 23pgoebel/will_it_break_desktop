@@ -44,3 +44,8 @@
 - Asked: Remove the brown triangle graphics under the supports.
 - Changed: Removed the bank triangles and base lines from the canvas and removed the matching feature note from spec.md.
 - Worked: Yes; the support area no longer draws those graphics.
+
+## 2026-11-24
+- Asked: Make the wheels even bigger and redraw each vehicle as basic rectangles and triangles.
+- Changed: Increased wheel size and kept the layered tire/rim/hub details; rebuilt the car, dump truck, semi, and fire engine from rectangular bodies and triangular cabs/roofs.
+- Worked: Yes; each vehicle now uses simple geometric shapes with larger wheel graphics.
