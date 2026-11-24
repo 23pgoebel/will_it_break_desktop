@@ -49,3 +49,8 @@
 - Asked: Make the wheels even bigger and redraw each vehicle as basic rectangles and triangles.
 - Changed: Increased wheel size and kept the layered tire/rim/hub details; rebuilt the car, dump truck, semi, and fire engine from rectangular bodies and triangular cabs/roofs.
 - Worked: Yes; each vehicle now uses simple geometric shapes with larger wheel graphics.
+
+## 2026-11-24
+- Asked: Rerun the validation problems and add expected-versus-actual values under New Validation Results in spec.md.
+- Changed: Reran both cases through the app solver on the reference truss and added a ten-row comparison table.
+- Worked: Yes; all reactions and member forces matched the expected values to the displayed precision.

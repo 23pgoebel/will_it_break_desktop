@@ -125,6 +125,23 @@ The app solver results below were run on the 60 ft, 10 ft tall, six-panel Pratt 
 | Asymmetric Traffic | Expected | 50,000 / 35,000 lb | 95,000 lb compression | 85,000 lb tension | 14,142.14 lb tension |
 | Asymmetric Traffic | App | 50,000 / 35,000 lb | -95,000 lb | +85,000 lb | +14,142.14 lb |
 
+### New Validation Results
+
+Both problems were rerun with the app solver on the 60 ft, 10 ft tall, six-panel Pratt reference truss. Member forces are for the x = 20 to 30 ft panel. The app reports compression as negative and tension as positive.
+
+| Problem | Check | Expected | Actual | Result |
+|---|---|---:|---:|---|
+| Heavy Transport | Reaction A | 45,000.00 lb upward | 45,000.00 lb upward | Match |
+| Heavy Transport | Reaction G | 45,000.00 lb upward | 45,000.00 lb upward | Match |
+| Heavy Transport | Top chord | 75,000.00 lb compression | -75,000.00 lb | Match |
+| Heavy Transport | Bottom chord | 70,000.00 lb tension | +70,000.00 lb | Match |
+| Heavy Transport | Diagonal | 7,071.07 lb tension | +7,071.07 lb | Match |
+| Asymmetric Traffic | Reaction A | 50,000.00 lb upward | 50,000.00 lb upward | Match |
+| Asymmetric Traffic | Reaction G | 35,000.00 lb upward | 35,000.00 lb upward | Match |
+| Asymmetric Traffic | Top chord | 95,000.00 lb compression | -95,000.00 lb | Match |
+| Asymmetric Traffic | Bottom chord | 85,000.00 lb tension | +85,000.00 lb | Match |
+| Asymmetric Traffic | Diagonal | 14,142.14 lb tension | +14,142.14 lb | Match |
+
 ## Out of scope
 - The app will not have any 3D elements
 - Members are all made of the same material, no options to change thickness or strength of members will be added
