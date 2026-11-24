@@ -134,7 +134,6 @@ The app solver results below were run on the 60 ft, 10 ft tall, six-panel Pratt 
 - Snap to feature that makes it easier to connect members by automatically merging joints that were placed within a few feet of each other
 - Changed colors so that yellow and red mean compression while green and blue mean tension
 - Added an undo, delete all, and drag joint buttons
-- Added banks beneath each end of the bridge
 
 
 

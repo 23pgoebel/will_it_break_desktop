@@ -432,12 +432,9 @@ class BridgeApp:
         if not hasattr(self, "canvas"): return
         c = self.canvas; c.delete("all")
         x0, y0, s = self._metrics(); right, bottom = x0+60*s, y0+25*s
-        # Road approaches and abutment banks.
+        # Road approaches.
         c.create_line(x0-5*s, bottom, x0, bottom, fill="#737d84", width=4)
         c.create_line(right, bottom, right+5*s, bottom, fill="#737d84", width=4)
-        for bx in (2.5, 57.5):
-            px, py = self._xy((bx,0)); c.create_polygon(px-3*s,py+4,px+3*s,py+4,px,py+4+2*s, fill="#b7a78f", outline="#766d5f")
-            c.create_line(px-3*s,py+4+2*s,px+3*s,py+4+2*s, fill="#766d5f", width=3)
         for x in range(61):
             px, _ = self._xy((x,0)); c.create_line(px,y0,px,bottom, fill="#c6d1d8" if x%5==0 else GRID, width=1)
         for y in range(26):

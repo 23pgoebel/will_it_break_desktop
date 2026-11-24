@@ -39,3 +39,8 @@
 - Asked: Add an Example Load button that automatically builds the validation bridge.
 - Changed: Added an undoable Example Load action that creates the six-panel, 10 ft tall Pratt reference truss used by the validation cases.
 - Worked: Yes; the action loads all reference joints, chords, verticals, and diagonals into the bridge model.
+
+## 2026-11-24
+- Asked: Remove the brown triangle graphics under the supports.
+- Changed: Removed the bank triangles and base lines from the canvas and removed the matching feature note from spec.md.
+- Worked: Yes; the support area no longer draws those graphics.
