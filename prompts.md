@@ -59,3 +59,8 @@
 - Asked: Double-check that New Validation Results exists in spec.md and add it if missing.
 - Changed: Confirmed the section was missing from the current spec and restored the expected-versus-actual table before Out of scope, preserving other existing spec edits.
 - Worked: Yes; New Validation Results is present with both problems' results.
+
+## 2026-11-24
+- Asked: Write a short README.md describing the app, packages to install, and startup command.
+- Changed: Added a concise README with the app summary, Python/Tkinter requirements, and `python app.py` command.
+- Worked: Yes; README.md contains all requested setup information.
