@@ -1,0 +1,1755 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Will it Break?</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #61717f;
+      --line: #d7dfe5;
+      --panel: #f7f9fb;
+      --grid: #dbe3e8;
+      --deck: #9a7b57;
+      --wood: #8a5a36;
+      --blue: #285c87;
+      --white: #fff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--ink);
+      background: #eef2f4;
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .mode-switch button {
+      min-width: 78px;
+      border: 0;
+      border-radius: 5px;
+      padding: 7px 12px;
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .mode-switch .active {
+      color: var(--white);
+      background: var(--blue);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 150px minmax(420px, 1fr) 210px;
+      gap: 12px;
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--white);
+    }
+
+    .tool-panel,
+    .status-panel {
+      padding: 12px;
+    }
+
+    .panel-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tool-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .tool {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      background: var(--white);
+      text-align: left;
+    }
+
+    .tool.active {
+      border-color: var(--blue);
+      box-shadow: inset 3px 0 var(--blue);
+      background: #edf4fa;
+    }
+
+    .canvas-panel {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .hint {
+      min-height: 42px;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      background: var(--panel);
+      font-size: 0.9rem;
+    }
+
+    .canvas {
+      min-height: 420px;
+      background: var(--white);
+      overflow: hidden;
+    }
+
+    .canvas svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .test-controls {
+      display: none;
+      align-items: end;
+      gap: 10px;
+      min-height: 78px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .control {
+      display: grid;
+      gap: 5px;
+      min-width: 150px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .control select,
+    .control input {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 8px;
+      background: var(--white);
+    }
+
+    .test-actions {
+      display: flex;
+      gap: 7px;
+      margin-left: auto;
+    }
+
+    .test-actions button,
+    .details-toggle {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 12px;
+      background: var(--white);
+    }
+
+    .test-actions .primary {
+      border-color: var(--blue);
+      color: var(--white);
+      background: var(--blue);
+    }
+
+    .status-panel {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .stat {
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stat-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .safe {
+      color: #247a46;
+    }
+
+    .member-hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    #memberLines line.redundant {
+      stroke: #e44e78;
+      stroke-dasharray: 16 8;
+    }
+
+    .details {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      margin: 0 12px 12px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .details-toggle {
+      color: var(--blue);
+    }
+
+    .details-content {
+      display: none;
+      width: 100%;
+      max-height: 240px;
+      overflow: auto;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    .details.open .details-content {
+      display: block;
+    }
+
+    .details.open {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .result-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px;
+      padding: 12px 14px;
+      border: 2px solid #2f7d4d;
+      border-radius: 8px;
+      background: #edf8f1;
+      color: #1f5535;
+    }
+
+    .result-banner.visible {
+      display: flex;
+    }
+
+    .result-banner.failed {
+      border-color: #a43b3b;
+      background: #fff1f1;
+      color: #7a2525;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .result-actions button {
+      min-height: 36px;
+      border: 1px solid currentColor;
+      border-radius: 6px;
+      padding: 0 12px;
+      background: #fff;
+      color: inherit;
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .details-table th,
+    .details-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 6px 8px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .details-table th:first-child,
+    .details-table td:first-child {
+      text-align: left;
+    }
+
+    @media (max-width: 980px) {
+      .workspace {
+        grid-template-columns: 130px minmax(380px, 1fr);
+      }
+
+      .status-panel {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .stat {
+        border-bottom: 0;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .tool-panel {
+        order: 2;
+      }
+
+      .tool-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .canvas-panel {
+        order: 1;
+      }
+
+      .status-panel {
+        order: 3;
+        grid-column: auto;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .canvas {
+        min-height: 340px;
+      }
+
+      .test-controls {
+        align-items: stretch;
+        flex-wrap: wrap;
+      }
+
+      .control {
+        min-width: calc(50% - 5px);
+      }
+
+      .test-actions {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .test-actions button {
+        flex: 1;
+      }
+    }
+
+    :focus-visible {
+      outline: 3px solid #f2b84b;
+      outline-offset: 2px;
+    }
+
+    .workspace.test-mode {
+      grid-template-columns: minmax(420px, 1fr) 210px;
+    }
+
+    .workspace.test-mode .tool-panel {
+      display: none;
+    }
+
+    .workspace.test-mode .canvas-panel {
+      grid-column: 1;
+    }
+
+    .workspace.test-mode .status-panel {
+      grid-column: 2;
+    }
+
+    .workspace.test-mode .test-controls {
+      display: flex;
+    }
+
+    #jointCircles circle {
+      cursor: default;
+    }
+
+    #jointCircles circle[data-member-joint="true"],
+    #jointCircles circle:not([data-fixed]):not([data-deck]) {
+      cursor: move;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <h1>Will it Break?</h1>
+      <nav class="mode-switch" aria-label="App mode">
+        <button class="active" id="buildModeButton" type="button" aria-pressed="true">Build</button>
+        <button id="testModeButton" type="button" aria-pressed="false">Test</button>
+      </nav>
+    </header>
+
+    <section class="workspace" aria-label="Bridge design workspace">
+      <aside class="panel tool-panel" aria-labelledby="tools-heading">
+        <h2 class="panel-title" id="tools-heading">Build tools</h2>
+        <div class="tool-list">
+          <button class="tool active" id="addMemberTool" type="button">Add Member</button>
+          <button class="tool" id="eraseMemberTool" type="button" aria-label="Erase member">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px">
+              <path d="M3 11.5 10.5 4l3.5 3.5-7.5 7.5H5.5Z" fill="#f49ac2" stroke="#c43b84" stroke-width="1.5"/>
+              <path d="m6.5 15 7.5-7.5" stroke="#c43b84" stroke-width="1.5"/>
+            </svg>
+            Erase Member
+          </button>
+          <button class="tool" id="dragJointTool" type="button">Drag Joint</button>
+          <button class="tool" id="clearBridgeTool" type="button" aria-label="Clear bridge">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px">
+              <path d="M5 6h8l-.7 9H5.7Z" fill="#111" stroke="#111" stroke-width="1"/>
+              <path d="M3.5 4h11M7 2.5h4M7 4v11M11 4v11" fill="none" stroke="#111" stroke-width="1.5"/>
+            </svg>
+            Clear Bridge
+          </button>
+          <button class="tool" id="undoButton" type="button" aria-label="Undo last bridge edit">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px">
+              <path d="M7 4 3 7.5 7 11" fill="none" stroke="#285c87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 7.5h7a4 4 0 0 1 0 8" fill="none" stroke="#285c87" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Undo
+          </button>
+        </div>
+      </aside>
+
+      <section class="panel canvas-panel" aria-label="60 foot bridge grid">
+        <div class="hint" role="status">Add Member: click the first endpoint, then the second endpoint.</div>
+
+        <div class="canvas">
+          <svg viewBox="0 0 1200 500" role="img" aria-label="Mockup of the 60 foot by 25 foot bridge grid">
+            <defs>
+              <pattern id="smallGrid" x="100" y="110" width="16.6667" height="7.2" patternUnits="userSpaceOnUse">
+                <path d="M 16.6667 0 L 0 0 0 7.2" fill="none" stroke="#dbe3e8" stroke-width="1"/>
+              </pattern>
+            </defs>
+
+            <rect width="1200" height="500" fill="#fff"/>
+            <rect x="100" y="110" width="1000" height="180" fill="url(#smallGrid)" stroke="#dbe3e8"/>
+
+            <g aria-label="Bridge abutments">
+              <polygon points="0,290 100,290 250,408 0,408" fill="#c9b99f" stroke="#17212b" stroke-width="3"/>
+              <polygon points="1200,290 1100,290 950,408 1200,408" fill="#c9b99f" stroke="#17212b" stroke-width="3"/>
+            </g>
+
+            <g id="memberLines" stroke="#8a5a36" stroke-width="10" stroke-linecap="round" data-members>
+              <line data-deck-member="true" x1="100" y1="290" x2="266" y2="290"/>
+              <line data-deck-member="true" x1="266" y1="290" x2="433" y2="290"/>
+              <line data-deck-member="true" x1="433" y1="290" x2="600" y2="290"/>
+              <line data-deck-member="true" x1="600" y1="290" x2="767" y2="290"/>
+              <line data-deck-member="true" x1="767" y1="290" x2="934" y2="290"/>
+              <line data-deck-member="true" x1="934" y1="290" x2="1100" y2="290"/>
+              <line x1="266" y1="218" x2="433" y2="218"/>
+              <line x1="433" y1="218" x2="600" y2="218"/>
+              <line x1="600" y1="218" x2="767" y2="218"/>
+              <line x1="767" y1="218" x2="934" y2="218"/>
+              <line x1="266" y1="290" x2="266" y2="218"/>
+              <line x1="433" y1="290" x2="433" y2="218"/>
+              <line x1="600" y1="290" x2="600" y2="218"/>
+              <line x1="767" y1="290" x2="767" y2="218"/>
+              <line x1="934" y1="290" x2="934" y2="218"/>
+              <line x1="100" y1="290" x2="266" y2="218"/>
+              <line x1="266" y1="218" x2="433" y2="290"/>
+              <line x1="433" y1="218" x2="600" y2="290"/>
+              <line x1="600" y1="290" x2="767" y2="218"/>
+              <line x1="767" y1="290" x2="934" y2="218"/>
+              <line x1="934" y1="218" x2="1100" y2="290"/>
+            </g>
+            <line id="memberOutline" x1="0" y1="0" x2="0" y2="0"
+                  stroke="#285c87" stroke-width="4" stroke-dasharray="10 7"
+                  stroke-linecap="round" opacity="0" pointer-events="none"/>
+
+            <g fill="none" stroke="#17212b" stroke-width="5">
+              <path d="M100 290 L72 318 L128 318 Z"/>
+              <path d="M1100 290 L1072 318 L1128 318 Z"/>
+            </g>
+
+            <g id="jointCircles" fill="#fff" stroke="#17212b" stroke-width="3" aria-label="Bridge joints">
+              <circle data-fixed="pin" data-deck="true" cx="100" cy="290" r="9"/>
+              <circle data-deck="true" cx="266" cy="290" r="7"/>
+              <circle data-deck="true" cx="433" cy="290" r="7"/>
+              <circle data-deck="true" cx="600" cy="290" r="7"/>
+              <circle data-deck="true" cx="767" cy="290" r="7"/>
+              <circle data-deck="true" cx="934" cy="290" r="7"/>
+              <circle data-fixed="roller" data-deck="true" cx="1100" cy="290" r="9"/>
+              <circle data-member-joint="true" cx="266" cy="218" r="8"/>
+              <circle data-member-joint="true" cx="433" cy="218" r="8"/>
+              <circle data-member-joint="true" cx="600" cy="218" r="8"/>
+              <circle data-member-joint="true" cx="767" cy="218" r="8"/>
+              <circle data-member-joint="true" cx="934" cy="218" r="8"/>
+            </g>
+
+            <g id="testVehicle" transform="translate(100 0)" opacity="0" pointer-events="none" aria-label="Test vehicle">
+              <path id="vehicleBody" d="M-72 246 L-48 246 L-28 218 L28 218 L52 246 L74 246 L86 258 L86 278 L-84 278 L-84 258 Z"
+                    fill="#d9b72c" stroke="#17212b" stroke-width="3" stroke-linejoin="round"/>
+              <path id="vehicleWindows" d="M-24 222 L18 222 L43 246 L-48 246 Z" fill="#a9cad4" stroke="#17212b" stroke-width="2"/>
+              <g id="vehicleWheels"></g>
+            </g>
+
+            <g fill="#61717f" font-size="14" text-anchor="middle">
+              <text x="100" y="350">0 ft</text>
+              <text x="266" y="350">10 ft</text>
+              <text x="433" y="350">20 ft</text>
+              <text x="600" y="350">30 ft</text>
+              <text x="767" y="350">40 ft</text>
+              <text x="934" y="350">50 ft</text>
+              <text x="1100" y="350">60 ft</text>
+            </g>
+
+          </svg>
+        </div>
+
+        <div class="test-controls" aria-label="Test mode controls">
+          <label class="control">
+            Vehicle
+            <select id="vehicleSelect">
+              <option>Semi</option>
+              <option>Car</option>
+              <option>Loaded Dump Truck</option>
+              <option>Fire Engine</option>
+            </select>
+          </label>
+          <label class="control">
+            Front axle position
+            <input id="frontAxlePosition" type="number" value="44" min="0" max="60" step="0.5" aria-label="Front axle position in feet">
+          </label>
+          <div class="test-actions">
+            <button type="button" id="parkButton">Park / Solve</button>
+            <button class="primary" id="driveButton" type="button">Drive Across</button>
+            <button id="pauseButton" type="button" disabled>Pause</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel status-panel" aria-label="Bridge status">
+        <h2 class="panel-title">Bridge status</h2>
+        <div class="stat">
+          <span class="stat-label">Cost</span>
+          <span class="stat-value" id="bridgeCost">$9,500</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Joints</span>
+          <span class="stat-value" id="jointCount">12</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Members</span>
+          <span class="stat-value" id="memberCount">21</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Stability</span>
+          <span class="stat-value safe" id="stabilityStatus">Incomplete</span>
+        </div>
+        <p class="member-hint" id="memberHint" role="status">
+          Add or remove members to reach a determinate bridge.
+        </p>
+      </aside>
+    </section>
+
+    <section class="result-banner" id="resultBanner" role="alert" aria-live="assertive">
+      <div>
+        <strong id="resultTitle"></strong>
+        <div id="resultMessage"></div>
+      </div>
+      <div class="result-actions">
+        <button id="restartButton" type="button">Restart</button>
+        <button id="driveAnotherButton" type="button">Drive Another Vehicle</button>
+      </div>
+    </section>
+
+    <section class="details" id="detailsPanel" aria-label="Details panel">
+      <span>Details panel</span>
+      <button class="details-toggle" id="detailsToggle" type="button" aria-expanded="false">Open details</button>
+      <div class="details-content" id="detailsContent">
+        <p id="solverMessage">Place a bridge and use Park to calculate member forces.</p>
+        <table class="details-table" id="reactionTable">
+          <thead><tr><th>Reaction</th><th>Force (lb)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <table class="details-table" id="memberTable">
+          <thead><tr><th>Member</th><th>Axial force (lb)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    const svg = document.querySelector(".canvas svg");
+    const jointCircles = document.querySelector("#jointCircles");
+    const memberLines = document.querySelector("#memberLines");
+    const memberOutline = document.querySelector("#memberOutline");
+    const hint = document.querySelector(".hint");
+    const toolButtons = [...document.querySelectorAll(".tool")];
+    let activeTool = "addMemberTool";
+    let firstMemberPoint = null;
+    const originX = 100;
+    const originY = 290;
+    const feetPerSvgX = 1000 / 60;
+    const svgPerFootY = 7.2;
+
+    function snapToFootGrid(clientX, clientY) {
+      const bounds = svg.getBoundingClientRect();
+      const svgX = (clientX - bounds.left) * 1200 / bounds.width;
+      const svgY = (clientY - bounds.top) * 500 / bounds.height;
+      let footX = Math.round((svgX - originX) / feetPerSvgX);
+      let footY = Math.round((originY - svgY) / svgPerFootY);
+
+      if (footX < 0 || footX > 60 || footY < 0 || footY > 25) {
+        return null;
+      }
+
+      let snappedSvgX = originX + footX * feetPerSvgX;
+      let snappedSvgY = originY - footY * svgPerFootY;
+      let nearestJoint = null;
+      let nearestDistance = Infinity;
+
+      [...jointCircles.querySelectorAll("circle")].forEach((circle) => {
+        const jointSvgX = Number(circle.getAttribute("cx"));
+        const jointSvgY = Number(circle.getAttribute("cy"));
+        const dxFeet = (svgX - jointSvgX) / feetPerSvgX;
+        const dyFeet = (svgY - jointSvgY) / svgPerFootY;
+        const distanceFeet = Math.hypot(dxFeet, dyFeet);
+
+        if (distanceFeet <= 2 && distanceFeet < nearestDistance) {
+          nearestDistance = distanceFeet;
+          nearestJoint = circle;
+        }
+      });
+
+      if (nearestJoint) {
+        snappedSvgX = Number(nearestJoint.getAttribute("cx"));
+        snappedSvgY = Number(nearestJoint.getAttribute("cy"));
+        footX = (snappedSvgX - originX) / feetPerSvgX;
+        footY = (originY - snappedSvgY) / svgPerFootY;
+      }
+
+      return {
+        footX,
+        footY,
+        svgX: snappedSvgX,
+        svgY: snappedSvgY,
+        snappedToJoint: Boolean(nearestJoint)
+      };
+    }
+
+    function updateBridgeStatus() {
+      const joints = [...jointCircles.querySelectorAll("circle")];
+      const lines = [...memberLines.querySelectorAll("line")];
+      const structuralJoints = joints.filter((circle) =>
+        !circle.hasAttribute("data-fixed") && !circle.hasAttribute("data-deck")
+      );
+      const structuralMembers = lines.filter((line) => {
+        const y1 = Number(line.getAttribute("y1"));
+        const y2 = Number(line.getAttribute("y2"));
+        return y1 !== originY || y2 !== originY;
+      });
+
+      let memberCost = 0;
+      lines.forEach((line) => {
+        const dxFeet = Math.abs(Number(line.getAttribute("x2")) - Number(line.getAttribute("x1"))) / feetPerSvgX;
+        const dyFeet = Math.abs(Number(line.getAttribute("y2")) - Number(line.getAttribute("y1"))) / svgPerFootY;
+        memberCost += Math.hypot(dxFeet, dyFeet) * 100;
+      });
+
+      const cost = joints.length * 500 + memberCost;
+      const jointTotal = joints.length;
+      const memberTotal = lines.length;
+      let stability = "Incomplete";
+      let stabilityClass = "";
+      let memberHint = "";
+      const memberDifference = memberTotal + 3 - jointTotal * 2;
+
+      [...lines].forEach((line) => line.classList.remove("redundant"));
+
+      if (memberDifference === 0) {
+        stability = "Stable";
+        stabilityClass = "safe";
+        memberHint = "Bridge is determinate: no more structural members are required.";
+      } else if (memberDifference > 0) {
+        stability = "Redundant";
+        stabilityClass = "";
+        memberHint = `${memberDifference} redundant member${memberDifference === 1 ? " is" : "s are"} present. Pink dashed members are candidates to remove.`;
+        const structuralLines = lines.filter((line) =>
+          !line.hasAttribute("data-deck-member"));
+        structuralLines
+          .slice(Math.max(0, structuralLines.length - memberDifference))
+          .forEach((line) => line.classList.add("redundant"));
+      } else {
+        const needed = -memberDifference;
+        memberHint = `Add ${needed} more member${needed === 1 ? "" : "s"} to reach a determinate bridge.`;
+      }
+
+      document.querySelector("#bridgeCost").textContent =
+        `$${Math.round(cost).toLocaleString("en-US")}`;
+      document.querySelector("#jointCount").textContent = jointTotal;
+      document.querySelector("#memberCount").textContent = memberTotal;
+      document.querySelector("#stabilityStatus").textContent = stability;
+      document.querySelector("#stabilityStatus").className =
+        `stat-value ${stabilityClass}`.trim();
+      document.querySelector("#memberHint").textContent = memberHint;
+    }
+
+    const VEHICLE_AXLES = {
+      "Car": [
+        { offset: 0, load: 2000 },
+        { offset: 10, load: 2000 }
+      ],
+      "Loaded Dump Truck": [
+        { offset: 0, load: 12000 },
+        { offset: 14, load: 17000 },
+        { offset: 18.5, load: 17000 }
+      ],
+      "Semi": [
+        { offset: 0, load: 8000 },
+        { offset: 14, load: 32000 },
+        { offset: 28, load: 32000 }
+      ],
+      "Fire Engine": [
+        { offset: 0, load: 20000 },
+        { offset: 17, load: 27000 },
+        { offset: 21.5, load: 27000 }
+      ]
+    };
+
+    const VEHICLE_VISUAL = {
+      "Car": { color: "#d9b72c", offsets: [0, -10], label: "Car" },
+      "Loaded Dump Truck": { color: "#bd642f", offsets: [0, -14, -18.5], label: "Loaded Dump Truck" },
+      "Semi": { color: "#4e6f93", offsets: [0, -14, -28], label: "Semi" },
+      "Fire Engine": { color: "#c74343", offsets: [0, -17, -21.5], label: "Fire Engine" }
+    };
+
+    let testFrontX = 44;
+    let driveTimer = null;
+    let drivePaused = false;
+    let isTestMode = false;
+    const undoStack = [];
+
+    function snapshotBridge() {
+      undoStack.push({
+        members: [...memberLines.querySelectorAll("line:not([data-deck-member])")].map((line) => ({
+          x1: line.getAttribute("x1"),
+          y1: line.getAttribute("y1"),
+          x2: line.getAttribute("x2"),
+          y2: line.getAttribute("y2")
+        })),
+        joints: [...jointCircles.querySelectorAll("circle[data-member-joint='true']")].map((circle) => ({
+          cx: circle.getAttribute("cx"),
+          cy: circle.getAttribute("cy")
+        }))
+      });
+      if (undoStack.length > 30) {
+        undoStack.shift();
+      }
+    }
+
+    function restoreBridge(snapshot) {
+      [...memberLines.querySelectorAll("line:not([data-deck-member])")].forEach((line) => line.remove());
+      [...jointCircles.querySelectorAll("circle[data-member-joint='true']")].forEach((circle) => circle.remove());
+
+      snapshot.joints.forEach((position) => {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", position.cx);
+        circle.setAttribute("cy", position.cy);
+        circle.setAttribute("r", "8");
+        circle.setAttribute("fill", "#fff");
+        circle.setAttribute("stroke", "#17212b");
+        circle.setAttribute("stroke-width", "3");
+        circle.dataset.memberJoint = "true";
+        jointCircles.appendChild(circle);
+      });
+
+      snapshot.members.forEach((position) => {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        Object.entries(position).forEach(([name, value]) => line.setAttribute(name, value));
+        line.setAttribute("stroke", "#8a5a36");
+        line.setAttribute("stroke-width", "10");
+        line.setAttribute("stroke-linecap", "round");
+        memberLines.appendChild(line);
+      });
+      firstMemberPoint = null;
+      updateBridgeStatus();
+    }
+
+    function stopDrive() {
+      if (driveTimer) {
+        window.clearInterval(driveTimer);
+        driveTimer = null;
+      }
+      drivePaused = false;
+      document.querySelector("#pauseButton").disabled = true;
+      document.querySelector("#pauseButton").textContent = "Pause";
+    }
+
+    function setTestVehicle(frontX) {
+      const vehicleName = document.querySelector("#vehicleSelect").value;
+      const visual = VEHICLE_VISUAL[vehicleName];
+      const frontWheelX = 100 + frontX * feetPerSvgX;
+
+      testFrontX = frontX;
+      document.querySelector("#frontAxlePosition").value = frontX;
+      const vehicle = document.querySelector("#testVehicle");
+      vehicle.setAttribute("transform", `translate(${frontWheelX} 0)`);
+      vehicle.setAttribute("opacity", "1");
+
+      document.querySelector("#vehicleBody").setAttribute("opacity", "0");
+      document.querySelector("#vehicleWindows").setAttribute("opacity", "0");
+
+      const wheels = document.querySelector("#vehicleWheels");
+      wheels.replaceChildren();
+
+      document.querySelector("#vehicleBody").setAttribute("fill", visual.color);
+      const vehicleDetails = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      vehicleDetails.setAttribute("id", "vehicleDetails");
+      const oldDetails = document.querySelector("#vehicleDetails");
+      if (oldDetails) {
+        oldDetails.remove();
+      }
+
+      let wheelPositions = [0];
+      if (vehicleName === "Car") {
+        document.querySelector("#vehicleBody").setAttribute("d",
+          "M-94 256 L-88 244 L-76 238 L-58 236 L-44 210 L-16 202 L20 202 L44 212 L58 236 L78 238 L94 244 L98 252 L98 278 L-98 278 L-98 264 Z");
+        document.querySelector("#vehicleWindows").setAttribute("d",
+          "M-58 236 L-42 212 L-16 206 L-12 236 Z M-6 206 L18 206 L38 212 L52 236 L0 236 Z");
+        vehicleDetails.innerHTML =
+          '<rect x="-98" y="252" width="196" height="8" fill="#ffc400" stroke="#17212b" stroke-width="2"/>' +
+          '<rect x="-98" y="252" width="196" height="8" fill="#ffc400" stroke="#17212b" stroke-width="2"/>' +
+          '<g fill="#17212b">' +
+          '<rect x="-94" y="252" width="8" height="8"/><rect x="-78" y="252" width="8" height="8"/>' +
+          '<rect x="-62" y="252" width="8" height="8"/><rect x="-46" y="252" width="8" height="8"/>' +
+          '<rect x="-30" y="252" width="8" height="8"/><rect x="-14" y="252" width="8" height="8"/>' +
+          '<rect x="2" y="252" width="8" height="8"/><rect x="18" y="252" width="8" height="8"/>' +
+          '<rect x="34" y="252" width="8" height="8"/><rect x="50" y="252" width="8" height="8"/>' +
+          '<rect x="66" y="252" width="8" height="8"/><rect x="82" y="252" width="8" height="8"/>' +
+          '</g><g fill="#fff">' +
+          '<rect x="-86" y="252" width="8" height="8"/><rect x="-70" y="252" width="8" height="8"/>' +
+          '<rect x="-54" y="252" width="8" height="8"/><rect x="-38" y="252" width="8" height="8"/>' +
+          '<rect x="-22" y="252" width="8" height="8"/><rect x="-6" y="252" width="8" height="8"/>' +
+          '<rect x="10" y="252" width="8" height="8"/><rect x="26" y="252" width="8" height="8"/>' +
+          '<rect x="42" y="252" width="8" height="8"/><rect x="58" y="252" width="8" height="8"/>' +
+          '<rect x="74" y="252" width="8" height="8"/>' +
+          '</g>' +
+          '<rect x="-16" y="190" width="32" height="14" rx="3" fill="#ffc400" stroke="#17212b" stroke-width="3"/>' +
+          '<text x="0" y="201" text-anchor="middle" font-size="10" font-weight="800" fill="#17212b">TAXI</text>' +
+          '<rect x="-78" y="258" width="156" height="9" rx="3" fill="#ffc400" stroke="#17212b" stroke-width="2"/>' +
+          '<rect x="-66" y="244" width="24" height="6" rx="2" fill="#17212b"/>' +
+          '<rect x="42" y="244" width="24" height="6" rx="2" fill="#17212b"/>' +
+          '<circle cx="-82" cy="258" r="6" fill="#e13e34" stroke="#17212b" stroke-width="2"/>' +
+          '<circle cx="82" cy="258" r="6" fill="#e13e34" stroke="#17212b" stroke-width="2"/>' +
+          '<circle cx="-34" cy="268" r="2" fill="#17212b"/>' +
+          '<circle cx="34" cy="268" r="2" fill="#17212b"/>';
+        wheelPositions = [0, -10];
+      } else if (vehicleName === "Loaded Dump Truck") {
+        document.querySelector("#vehicleBody").setAttribute("d",
+          "M-108 278 L-108 250 L-82 250 L-82 224 L-46 224 L-28 250 L68 250 L86 264 L86 278 Z");
+        document.querySelector("#vehicleWindows").setAttribute("d",
+          "M-76 228 L-52 228 L-36 250 L-76 250 Z");
+        vehicleDetails.innerHTML =
+          '<path d="M-26 250 L-106 250 L-122 224 L-82 224 L-62 198 L18 198 L48 224 L74 224 L82 250 Z" fill="#f5ad16" stroke="#17212b" stroke-width="3"/>' +
+          '<path d="M-122 224 L-82 224 L-62 198 L18 198 L48 224 L74 224 L58 250 L-106 250 Z" fill="#f7b61a" stroke="#17212b" stroke-width="3"/>' +
+          '<path d="M-62 198 L18 198 L48 224 L-82 224 Z" fill="#c8792c" stroke="#17212b" stroke-width="2"/>' +
+          '<path d="M-74 212 L-38 212 L-16 224 L-82 224 Z M-28 198 L10 198 L34 218 L-12 218 Z" fill="#8b5a32" opacity="0.85"/>' +
+          '<circle cx="-46" cy="204" r="5" fill="#9b663b"/><circle cx="-10" cy="210" r="7" fill="#9b663b"/><circle cx="20" cy="218" r="5" fill="#9b663b"/>' +
+          '<rect x="-104" y="254" width="44" height="24" rx="2" fill="#d68d12"/>' +
+          '<rect x="-48" y="254" width="44" height="24" rx="2" fill="#d68d12"/>' +
+          '<rect x="8" y="254" width="44" height="24" rx="2" fill="#d68d12"/>' +
+          '<rect x="-40" y="250" width="18" height="6" rx="2" fill="#17212b"/>' +
+          '<circle cx="74" cy="254" r="5" fill="#fff4b0" stroke="#17212b" stroke-width="2"/>';
+        wheelPositions = [0, -14, -18.5];
+      } else if (vehicleName === "Semi") {
+        document.querySelector("#vehicleBody").setAttribute("d",
+          "M-118 278 L-118 248 L-108 248 L-108 218 L-72 218 L-62 238 L-62 278 Z M-62 278 L-62 252 L88 252 L96 264 L96 278 Z");
+        document.querySelector("#vehicleWindows").setAttribute("d",
+          "M-104 222 L-72 222 L-64 238 L-104 238 Z");
+        vehicleDetails.innerHTML =
+          '<rect x="-112" y="278" width="208" height="4" fill="#17212b"/>' +
+          '<rect x="-184" y="202" width="118" height="76" rx="2" fill="#4c5a66" stroke="#17212b" stroke-width="4"/>' +
+          '<rect x="-178" y="208" width="106" height="64" fill="#657585" stroke="#edf1f4" stroke-width="2"/>' +
+          '<rect x="-108" y="278" width="204" height="8" fill="#5a6570" stroke="#17212b" stroke-width="2"/>' +
+          '<rect x="-118" y="286" width="214" height="5" rx="2" fill="#17212b"/>' +
+          '<rect x="-98" y="238" width="54" height="40" rx="3" fill="#3569a3" stroke="#17212b" stroke-width="3"/>' +
+          '<path d="M-106 238 L-94 218 L-66 218 L-56 238 Z" fill="#3569a3" stroke="#17212b" stroke-width="3"/>' +
+          '<rect x="-98" y="244" width="28" height="28" rx="3" fill="#8fc0dc" stroke="#17212b" stroke-width="2"/>' +
+          '<rect x="-64" y="244" width="18" height="34" rx="2" fill="#3569a3" stroke="#17212b" stroke-width="2"/>' +
+          '<circle cx="-112" cy="248" r="4" fill="#e58a43"/>' +
+          '<rect x="-72" y="268" width="16" height="4" rx="2" fill="#17212b"/>';
+        wheelPositions = [0, -14, -28];
+      } else {
+        document.querySelector("#vehicleBody").setAttribute("d",
+          "M-104 278 L-104 238 L-88 238 L-82 224 L-62 216 L-58 238 L58 238 L78 250 L88 278 Z");
+        document.querySelector("#vehicleWindows").setAttribute("d",
+          "M-56 224 L-24 224 L-18 238 L-58 238 Z");
+        vehicleDetails.innerHTML =
+          '<path d="M-92 238 L-92 218 L-74 218 L-74 238 Z" fill="#b91f2c" stroke="#17212b" stroke-width="3"/>' +
+          '<rect x="-84" y="242" width="142" height="36" rx="5" fill="#c92f38" stroke="#17212b" stroke-width="3"/>' +
+          '<rect x="-78" y="246" width="136" height="28" rx="3" fill="#dc3d45" stroke="#17212b" stroke-width="2"/>' +
+          '<rect x="-72" y="250" width="124" height="12" rx="6" fill="#f1f3f5" stroke="#17212b" stroke-width="3"/>' +
+          '<path d="M-62 238 V250 M-46 238 V250 M-30 238 V250 M-14 238 V250 M2 238 V250 M18 238 V250 M34 238 V250 M50 238 V250" stroke="#b91f2c" stroke-width="5"/>' +
+          '<rect x="-62" y="266" width="46" height="12" rx="2" fill="#b91f2c" stroke="#17212b" stroke-width="2"/>' +
+          '<circle cx="-50" cy="272" r="3" fill="#17212b"/>' +
+          '<rect x="-22" y="258" width="34" height="18" rx="2" fill="#c92f38" stroke="#17212b" stroke-width="2"/>' +
+          '<rect x="-16" y="262" width="22" height="10" rx="2" fill="#edf4f8" stroke="#17212b" stroke-width="2"/>' +
+          '<path d="M-4 274 L18 274" stroke="#17212b" stroke-width="4"/>' +
+          '<rect x="-8" y="202" width="54" height="8" rx="2" fill="#edf0f2" stroke="#17212b" stroke-width="3"/>' +
+          '<rect x="-12" y="194" width="62" height="8" rx="2" fill="#edf0f2" stroke="#17212b" stroke-width="3"/>' +
+          '<rect x="-16" y="186" width="70" height="8" rx="2" fill="#edf0f2" stroke="#17212b" stroke-width="3"/>' +
+          '<path d="M-44 216 L-38 216 L-34 226 L-48 226 Z" fill="#3569a3" stroke="#17212b" stroke-width="2"/>' +
+          '<circle cx="-40" cy="214" r="9" fill="#3569a3" stroke="#17212b" stroke-width="3"/>' +
+          '<circle cx="58" cy="248" r="5" fill="#fff4b0" stroke="#17212b" stroke-width="2"/>';
+        wheelPositions = [0, -17, -21.5];
+      }
+
+      vehicleDetails.setAttribute("id", "vehicleDetails");
+      vehicleDetails.setAttribute("opacity", "0");
+      vehicle.appendChild(vehicleDetails);
+
+      wheelPositions.forEach((position) => {
+        const offset = position * feetPerSvgX;
+        const outer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outer.setAttribute("cx", offset);
+        outer.setAttribute("cy", "278");
+        outer.setAttribute("r", "13");
+        outer.setAttribute("fill", "#17212b");
+        const inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        inner.setAttribute("cx", offset);
+        inner.setAttribute("cy", "278");
+        inner.setAttribute("r", "6");
+        inner.setAttribute("fill", "#eef2f4");
+        wheels.appendChild(outer);
+        wheels.appendChild(inner);
+      });
+
+      vehicle.setAttribute("aria-label", `${visual.label} with front axle at ${frontX} feet`);
+    }
+
+    function applyMemberColors(memberForces) {
+      [...memberLines.querySelectorAll("line")].forEach((line, index) => {
+        if (line.hasAttribute("data-deck-member")) {
+          const force = memberForces[index] || 0;
+          const ratio = Math.abs(force) / (force >= 0 ? 90000 : 75000);
+          if (ratio > 1) {
+            line.setAttribute("stroke", "#111");
+          } else if (force > 0) {
+            if (ratio >= 0.8) line.setAttribute("stroke", "#2468d7");
+            else if (ratio >= 0.5) line.setAttribute("stroke", "#1f82c9");
+            else line.setAttribute("stroke", "#8a5a36");
+          } else if (force < 0) {
+            if (ratio >= 0.8) line.setAttribute("stroke", "#d7261e");
+            else if (ratio >= 0.5) line.setAttribute("stroke", "#ed5a24");
+            else line.setAttribute("stroke", "#8a5a36");
+          } else {
+            line.setAttribute("stroke", "#8a5a36");
+          }
+          return;
+        }
+
+        const force = memberForces[index] || 0;
+        const capacity = force >= 0 ? 90000 : 75000;
+        const ratio = Math.abs(force) / capacity;
+        if (ratio > 1) {
+          line.setAttribute("stroke", "#111");
+        } else if (force > 0) {
+          if (ratio >= 0.8) line.setAttribute("stroke", "#2468d7");
+          else if (ratio >= 0.5) line.setAttribute("stroke", "#1f82c9");
+          else line.setAttribute("stroke", "#8a5a36");
+        } else if (force < 0) {
+          if (ratio >= 0.8) line.setAttribute("stroke", "#d7261e");
+          else if (ratio >= 0.5) line.setAttribute("stroke", "#ed5a24");
+          else line.setAttribute("stroke", "#8a5a36");
+        } else {
+          line.setAttribute("stroke", "#8a5a36");
+        }
+      });
+    }
+
+    function getFootPosition(circle) {
+      return {
+        x: (Number(circle.getAttribute("cx")) - originX) / feetPerSvgX,
+        y: (originY - Number(circle.getAttribute("cy"))) / svgPerFootY
+      };
+    }
+
+    function distributeAxleLoads(frontX, vehicleName) {
+      const axleData = VEHICLE_AXLES[vehicleName];
+      const jointLoads = new Map();
+      const deckJoints = [...jointCircles.querySelectorAll("circle")]
+        .map((circle) => ({ circle, position: getFootPosition(circle) }))
+        .filter((item) => item.position.y === 0)
+        .sort((a, b) => a.position.x - b.position.x);
+
+      axleData.forEach((axle) => {
+        const axlePosition = frontX - (typeof axle.offset === "number" ? axle.offset : 0);
+        const load = typeof axle.load === "number" ? axle.load : axle;
+        if (axlePosition < 0 || axlePosition > 60) {
+          return;
+        }
+
+        let left = deckJoints[0];
+        let right = deckJoints[deckJoints.length - 1];
+        for (let i = 0; i < deckJoints.length - 1; i += 1) {
+          if (axlePosition >= deckJoints[i].position.x
+            && axlePosition <= deckJoints[i + 1].position.x) {
+            left = deckJoints[i];
+            right = deckJoints[i + 1];
+            break;
+          }
+        }
+
+        if (Math.abs(axlePosition - left.position.x) < 0.0001) {
+          jointLoads.set(left.circle, (jointLoads.get(left.circle) || 0) + load);
+          return;
+        }
+        if (Math.abs(axlePosition - right.position.x) < 0.0001) {
+          jointLoads.set(right.circle, (jointLoads.get(right.circle) || 0) + load);
+          return;
+        }
+
+        const span = right.position.x - left.position.x;
+        const rightShare = span === 0 ? 0 : load * (axlePosition - left.position.x) / span;
+        jointLoads.set(right.circle, (jointLoads.get(right.circle) || 0) + rightShare);
+        jointLoads.set(left.circle, (jointLoads.get(left.circle) || 0) + (load - rightShare));
+      });
+
+      return jointLoads;
+    }
+
+    function gaussSolve(matrix, rhs) {
+      const size = rhs.length;
+      const augmented = matrix.map((row, index) => [...row, rhs[index]]);
+      const pivots = [];
+
+      for (let column = 0; column < size; column += 1) {
+        let pivotRow = column;
+        for (let row = column + 1; row < size; row += 1) {
+          if (Math.abs(augmented[row][column]) > Math.abs(augmented[pivotRow][column])) {
+            pivotRow = row;
+          }
+        }
+
+        const pivot = augmented[pivotRow][column];
+        if (!Number.isFinite(pivot) || Math.abs(pivot) < 1e-9) {
+          return null;
+        }
+
+        [augmented[column], augmented[pivotRow]] = [augmented[pivotRow], augmented[column]];
+        pivots.push(Math.abs(augmented[column][column]));
+
+        for (let row = 0; row < size; row += 1) {
+          if (row === column) {
+            continue;
+          }
+          const factor = augmented[row][column] / augmented[column][column];
+          if (Math.abs(factor) < 1e-12) {
+            continue;
+          }
+          for (let entry = column; entry <= size; entry += 1) {
+            augmented[row][entry] -= factor * augmented[column][entry];
+          }
+        }
+      }
+
+      const solution = augmented.map((row, index) => row[size] / row[index]);
+      const minPivot = Math.min(...pivots);
+      const maxPivot = Math.max(...pivots);
+      if (minPivot / maxPivot < 1e-8) {
+        return null;
+      }
+      return solution;
+    }
+
+    function solveTruss(frontX) {
+      const circles = [...jointCircles.querySelectorAll("circle")];
+      const lines = [...memberLines.querySelectorAll("line")];
+      const vehiclesName = document.querySelector("#vehicleSelect").value;
+      const nodeCount = circles.length;
+      const unknownCount = lines.length + 3;
+
+      if (unknownCount !== nodeCount * 2) {
+        return {
+          stable: false,
+          message: `Unstable: the truss has ${lines.length} members and ${nodeCount} joints, so M + 3 must equal 2 × J.`
+        };
+      }
+
+      const pin = circles.find((circle) => circle.hasAttribute("data-fixed")
+        && circle.getAttribute("data-fixed") === "pin");
+      const roller = circles.find((circle) => circle.hasAttribute("data-fixed")
+        && circle.getAttribute("data-fixed") === "roller");
+      if (!pin || !roller) {
+        return { stable: false, message: "Unstable: both the pin and roller supports are required." };
+      }
+
+      const nodeIndex = new Map(circles.map((circle, index) => [circle, index]));
+      const matrix = Array.from({ length: unknownCount }, () => Array(unknownCount).fill(0));
+      const rhs = Array(unknownCount).fill(0);
+      const nodalLoads = distributeAxleLoads(frontX, vehiclesName);
+
+      nodalLoads.forEach((load, circle) => {
+        const index = nodeIndex.get(circle);
+        if (index !== undefined) {
+          rhs[index * 2 + 1] += load;
+        }
+      });
+
+      lines.forEach((line, memberIndex) => {
+        const start = circles.find((circle) =>
+          Math.abs(Number(circle.getAttribute("cx")) - Number(line.getAttribute("x1"))) < 1
+          && Math.abs(Number(circle.getAttribute("cy")) - Number(line.getAttribute("y1"))) < 1);
+        const end = circles.find((circle) =>
+          Math.abs(Number(circle.getAttribute("cx")) - Number(line.getAttribute("x2"))) < 1
+          && Math.abs(Number(circle.getAttribute("cy")) - Number(line.getAttribute("y2"))) < 1);
+        if (!start || !end) {
+          return;
+        }
+
+        const startPosition = getFootPosition(start);
+        const endPosition = getFootPosition(end);
+        const dx = endPosition.x - startPosition.x;
+        const dy = endPosition.y - startPosition.y;
+        const length = Math.hypot(dx, dy);
+        if (length < 0.0001) {
+          return;
+        }
+
+        const startIndex = nodeIndex.get(start);
+        const endIndex = nodeIndex.get(end);
+        const ux = dx / length;
+        const uy = dy / length;
+        matrix[startIndex * 2][memberIndex] += ux;
+        matrix[startIndex * 2 + 1][memberIndex] += uy;
+        matrix[endIndex * 2][memberIndex] -= ux;
+        matrix[endIndex * 2 + 1][memberIndex] -= uy;
+      });
+
+      const pinIndex = nodeIndex.get(pin);
+      const rollerIndex = nodeIndex.get(roller);
+      matrix[pinIndex * 2][lines.length] = 1;
+      matrix[pinIndex * 2 + 1][lines.length + 1] = 1;
+      matrix[rollerIndex * 2 + 1][lines.length + 2] = 1;
+
+      const solution = gaussSolve(matrix, rhs);
+      if (!solution) {
+        return { stable: false, message: "Unstable: the equilibrium system is singular or nearly singular." };
+      }
+
+      const memberForces = solution.slice(0, lines.length);
+      const reactions = {
+        pinX: solution[lines.length],
+        pinY: solution[lines.length + 1],
+        rollerY: solution[lines.length + 2]
+      };
+      return { stable: true, memberForces, reactions, lines, circles, nodalLoads };
+    }
+
+    function formatForce(force) {
+      return `${force >= 0 ? "+" : ""}${force.toLocaleString("en-US", {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 0
+      })}`;
+    }
+
+    function showFailure(memberIndex) {
+      stopDrive();
+      const banner = document.querySelector("#resultBanner");
+      banner.classList.add("visible", "failed");
+      document.querySelector("#resultTitle").textContent = "Your Bridge Failed";
+      document.querySelector("#resultMessage").textContent =
+        `Member ${memberIndex + 1} exceeded its allowable tension or compression capacity.`;
+      document.querySelector("#restartButton").hidden = false;
+      document.querySelector("#driveAnotherButton").hidden = true;
+      document.querySelector("#stabilityStatus").textContent = "Failed";
+      document.querySelector("#stabilityStatus").className = "stat-value";
+      hint.textContent = `Your Bridge Failed at member ${memberIndex + 1}.`;
+    }
+
+    function showSuccess(vehicleName) {
+      stopDrive();
+      const banner = document.querySelector("#resultBanner");
+      banner.classList.remove("failed");
+      banner.classList.add("visible");
+      document.querySelector("#resultTitle").textContent = "Vehicle Crossed Safely";
+      document.querySelector("#resultMessage").textContent =
+        `${vehicleName} crossed the entire 60 ft bridge without exceeding a member capacity.`;
+      document.querySelector("#restartButton").hidden = true;
+      document.querySelector("#driveAnotherButton").hidden = false;
+      document.querySelector("#stabilityStatus").textContent = "Safe";
+      document.querySelector("#stabilityStatus").className = "stat-value safe";
+      hint.textContent = "Vehicle crossed safely.";
+    }
+
+    function renderSolverResult(result) {
+      const reactionTable = document.querySelector("#reactionTable tbody");
+      const memberTable = document.querySelector("#memberTable tbody");
+      document.querySelector("#solverMessage").textContent = result.message
+        || `Parked load solved at front axle x = ${document.querySelector("#frontAxlePosition").value} ft.`;
+
+      reactionTable.replaceChildren();
+      memberTable.replaceChildren();
+
+      if (!result.stable) {
+        return;
+      }
+
+      [
+        ["Pin X", result.reactions.pinX],
+        ["Pin Y", result.reactions.pinY],
+        ["Roller Y", result.reactions.rollerY]
+      ].forEach(([label, force]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${label}</td><td>${formatForce(force)}</td>`;
+        reactionTable.appendChild(row);
+      });
+
+      result.memberForces.forEach((force, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>Member ${index + 1}</td><td>${formatForce(force)}</td>`;
+        memberTable.appendChild(row);
+      });
+    }
+
+    svg.addEventListener("mousemove", (event) => {
+      if (activeTool !== "addMemberTool" || !firstMemberPoint) {
+        memberOutline.setAttribute("opacity", "0");
+        return;
+      }
+
+      const point = snapToFootGrid(event.clientX, event.clientY);
+      if (!point) {
+        memberOutline.setAttribute("opacity", "0");
+        return;
+      }
+
+      memberOutline.setAttribute("x1", firstMemberPoint.svgX);
+      memberOutline.setAttribute("y1", firstMemberPoint.svgY);
+      memberOutline.setAttribute("x2", point.svgX);
+      memberOutline.setAttribute("y2", point.svgY);
+      memberOutline.setAttribute("opacity", "0.9");
+    });
+
+    function setActiveTool(tool) {
+      activeTool = tool;
+      firstMemberPoint = null;
+      memberOutline.setAttribute("opacity", "0");
+      toolButtons.forEach((button) => button.classList.remove("active"));
+      document.querySelector(`#${tool}`).classList.add("active");
+    }
+
+    function findOrAddJoint(point) {
+      const existing = [...jointCircles.querySelectorAll("circle")].find((circle) => {
+        return Math.abs(Number(circle.getAttribute("cx")) - point.svgX) < 1
+          && Math.abs(Number(circle.getAttribute("cy")) - point.svgY) < 1;
+      });
+      if (existing) {
+        return existing;
+      }
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", point.svgX);
+      circle.setAttribute("cy", point.svgY);
+      circle.setAttribute("r", "8");
+      circle.setAttribute("fill", "#fff");
+      circle.setAttribute("stroke", "#17212b");
+      circle.setAttribute("stroke-width", "3");
+      circle.dataset.memberJoint = "true";
+      jointCircles.appendChild(circle);
+      return circle;
+    }
+
+    function removeOrphanMemberJoints() {
+      [...jointCircles.querySelectorAll("circle[data-member-joint='true']")].forEach((circle) => {
+        const cx = Number(circle.getAttribute("cx"));
+        const cy = Number(circle.getAttribute("cy"));
+        const used = [...memberLines.querySelectorAll("line")].some((line) => {
+          return (Math.abs(Number(line.getAttribute("x1")) - cx) < 1
+            && Math.abs(Number(line.getAttribute("y1")) - cy) < 1)
+            || (Math.abs(Number(line.getAttribute("x2")) - cx) < 1
+            && Math.abs(Number(line.getAttribute("y2")) - cy) < 1);
+        });
+        if (!used) {
+          circle.remove();
+        }
+      });
+    }
+
+    let draggedCircle = null;
+    let suppressSvgClick = false;
+
+    function rawGridPoint(clientX, clientY) {
+      const bounds = svg.getBoundingClientRect();
+      const svgX = (clientX - bounds.left) * 1200 / bounds.width;
+      const svgY = (clientY - bounds.top) * 500 / bounds.height;
+      const footX = Math.max(0, Math.min(60, Math.round((svgX - originX) / feetPerSvgX)));
+      const footY = Math.max(0, Math.min(25, Math.round((originY - svgY) / svgPerFootY)));
+      return {
+        footX,
+        footY,
+        svgX: originX + footX * feetPerSvgX,
+        svgY: originY - footY * svgPerFootY
+      };
+    }
+
+    jointCircles.addEventListener("pointerdown", (event) => {
+      const circle = event.target.closest("circle");
+      if (!circle || activeTool !== "dragJointTool"
+        || circle.hasAttribute("data-fixed") || circle.hasAttribute("data-deck")) {
+        return;
+      }
+      draggedCircle = circle;
+      snapshotBridge();
+      suppressSvgClick = true;
+      draggedCircle.dataset.lastCx = circle.getAttribute("cx");
+      draggedCircle.dataset.lastCy = circle.getAttribute("cy");
+      circle.setPointerCapture(event.pointerId);
+      hint.textContent = "Dragging joint. Release it at a 1 ft grid intersection.";
+    });
+
+    svg.addEventListener("pointermove", (event) => {
+      if (!draggedCircle) {
+        return;
+      }
+      const point = rawGridPoint(event.clientX, event.clientY);
+      draggedCircle.setAttribute("cx", point.svgX);
+      draggedCircle.setAttribute("cy", point.svgY);
+      [...memberLines.querySelectorAll("line")].forEach((line) => {
+        if (Math.abs(Number(line.getAttribute("x1")) - Number(draggedCircle.dataset.lastCx || -9999)) < 1
+          && Math.abs(Number(line.getAttribute("y1")) - Number(draggedCircle.dataset.lastCy || -9999)) < 1) {
+          line.setAttribute("x1", point.svgX);
+          line.setAttribute("y1", point.svgY);
+        }
+        if (Math.abs(Number(line.getAttribute("x2")) - Number(draggedCircle.dataset.lastCx || -9999)) < 1
+          && Math.abs(Number(line.getAttribute("y2")) - Number(draggedCircle.dataset.lastCy || -9999)) < 1) {
+          line.setAttribute("x2", point.svgX);
+          line.setAttribute("y2", point.svgY);
+        }
+      });
+
+      draggedCircle.dataset.lastCx = point.svgX;
+      draggedCircle.dataset.lastCy = point.svgY;
+    });
+
+    svg.addEventListener("pointerup", (event) => {
+      if (!draggedCircle) {
+        return;
+      }
+
+      const cx = Number(draggedCircle.getAttribute("cx"));
+      const cy = Number(draggedCircle.getAttribute("cy"));
+      let mergedJoint = null;
+      let nearestDistance = Infinity;
+
+      [...jointCircles.querySelectorAll("circle")].forEach((circle) => {
+        if (circle === draggedCircle) {
+          return;
+        }
+        const dxFeet = (Number(circle.getAttribute("cx")) - cx) / feetPerSvgX;
+        const dyFeet = (Number(circle.getAttribute("cy")) - cy) / svgPerFootY;
+        const distanceFeet = Math.hypot(dxFeet, dyFeet);
+        if (distanceFeet <= 2 && distanceFeet < nearestDistance) {
+          nearestDistance = distanceFeet;
+          mergedJoint = circle;
+        }
+      });
+
+      if (mergedJoint) {
+        const mergedCx = Number(mergedJoint.getAttribute("cx"));
+        const mergedCy = Number(mergedJoint.getAttribute("cy"));
+        [...memberLines.querySelectorAll("line")].forEach((line) => {
+          if (Math.abs(Number(line.getAttribute("x1")) - cx) < 1
+            && Math.abs(Number(line.getAttribute("y1")) - cy) < 1) {
+            line.setAttribute("x1", mergedCx);
+            line.setAttribute("y1", mergedCy);
+          }
+          if (Math.abs(Number(line.getAttribute("x2")) - cx) < 1
+            && Math.abs(Number(line.getAttribute("y2")) - cy) < 1) {
+            line.setAttribute("x2", mergedCx);
+            line.setAttribute("y2", mergedCy);
+          }
+        });
+        draggedCircle.remove();
+      }
+
+      delete draggedCircle.dataset.lastCx;
+      delete draggedCircle.dataset.lastCy;
+      draggedCircle = null;
+      hint.textContent = "Joint drag complete.";
+      updateBridgeStatus();
+      window.setTimeout(() => {
+        suppressSvgClick = false;
+      }, 0);
+    });
+
+    document.querySelector("#addMemberTool").addEventListener("click", () => {
+      setActiveTool("addMemberTool");
+      hint.textContent = "Add Member: click the first endpoint, then the second endpoint.";
+    });
+    document.querySelector("#eraseMemberTool").addEventListener("click", () => {
+      setActiveTool("eraseMemberTool");
+      hint.textContent = "Erase Member: click a member to delete it.";
+    });
+    document.querySelector("#dragJointTool").addEventListener("click", () => {
+      setActiveTool("dragJointTool");
+      hint.textContent = "Drag Joint: drag a structural joint on the 1 ft grid.";
+    });
+    document.querySelector("#detailsToggle").addEventListener("click", () => {
+      const panel = document.querySelector("#detailsPanel");
+      const toggle = document.querySelector("#detailsToggle");
+      const isOpen = panel.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      toggle.textContent = isOpen ? "Close details" : "Open details";
+    });
+
+    document.querySelector("#buildModeButton").addEventListener("click", () => {
+      isTestMode = false;
+      stopDrive();
+      document.querySelector(".workspace").classList.remove("test-mode");
+      document.querySelector("#buildModeButton").classList.add("active");
+      document.querySelector("#testModeButton").classList.remove("active");
+      document.querySelector("#buildModeButton").setAttribute("aria-pressed", "true");
+      document.querySelector("#testModeButton").setAttribute("aria-pressed", "false");
+      document.querySelector("#testVehicle").setAttribute("opacity", "0");
+      updateBridgeStatus();
+      hint.textContent = "Build mode: add or edit structural members.";
+    });
+
+    document.querySelector("#testModeButton").addEventListener("click", () => {
+      isTestMode = true;
+      stopDrive();
+      document.querySelector("#resultBanner").classList.remove("visible", "failed");
+      document.querySelector(".workspace").classList.add("test-mode");
+      document.querySelector("#testModeButton").classList.add("active");
+      document.querySelector("#buildModeButton").classList.remove("active");
+      document.querySelector("#testModeButton").setAttribute("aria-pressed", "true");
+      document.querySelector("#buildModeButton").setAttribute("aria-pressed", "false");
+      setActiveTool("eraseMemberTool");
+      setTestVehicle(testFrontX);
+      hint.textContent = "Test mode: park or drive a vehicle across the bridge.";
+    });
+    document.querySelector("#parkButton").addEventListener("click", () => {
+      const positionInput = document.querySelector("#frontAxlePosition");
+      let frontX = Number(positionInput.value);
+      if (!Number.isFinite(frontX)) {
+        frontX = 44;
+      }
+      frontX = Math.max(0, Math.min(60, frontX));
+      positionInput.value = frontX;
+      setTestVehicle(frontX);
+      const result = solveTruss(frontX);
+      renderSolverResult(result);
+      if (result.stable) {
+        const detailsPanel = document.querySelector("#detailsPanel");
+        const detailsToggle = document.querySelector("#detailsToggle");
+        if (!detailsPanel.classList.contains("open")) {
+          detailsPanel.classList.add("open");
+          detailsToggle.setAttribute("aria-expanded", "true");
+          detailsToggle.textContent = "Close details";
+        }
+
+        applyMemberColors(result.memberForces);
+        hint.textContent = `Parked load solved at front axle x = ${frontX} ft.`;
+      } else {
+        hint.textContent = result.message;
+      }
+    });
+
+    document.querySelector("#vehicleSelect").addEventListener("change", () => {
+      stopDrive();
+      setTestVehicle(testFrontX);
+      hint.textContent = "Vehicle changed. Park or drive it across the bridge.";
+    });
+
+    document.querySelector("#frontAxlePosition").addEventListener("input", (event) => {
+      let frontX = Number(event.target.value);
+      if (Number.isFinite(frontX)) {
+        frontX = Math.round(frontX * 2) / 2;
+        frontX = Math.max(0, Math.min(60, frontX));
+        setTestVehicle(frontX);
+      }
+    });
+
+    document.querySelector("#pauseButton").addEventListener("click", () => {
+      if (!driveTimer) {
+        return;
+      }
+      drivePaused = !drivePaused;
+      document.querySelector("#pauseButton").textContent = drivePaused ? "Resume" : "Pause";
+      hint.textContent = drivePaused ? "Vehicle paused." : "Vehicle moving.";
+    });
+
+    document.querySelector("#driveButton").addEventListener("click", () => {
+      stopDrive();
+      if (!isTestMode) {
+        hint.textContent = "Switch to Test mode before driving.";
+        return;
+      }
+
+      testFrontX = 0;
+      setTestVehicle(testFrontX);
+      document.querySelector("#pauseButton").disabled = false;
+      document.querySelector("#pauseButton").textContent = "Pause";
+      hint.textContent = "Vehicle is driving across the bridge.";
+
+      driveTimer = window.setInterval(() => {
+        if (drivePaused) {
+          return;
+        }
+
+        const crossingVehicle = VEHICLE_VISUAL[document.querySelector("#vehicleSelect").value];
+        const rearAxleOffset = crossingVehicle.offsets[crossingVehicle.offsets.length - 1];
+        const finalFrontPosition = 60 - rearAxleOffset;
+        testFrontX = Math.min(finalFrontPosition, testFrontX + 0.5);
+        setTestVehicle(testFrontX);
+
+        const result = solveTruss(testFrontX);
+        if (!result.stable) {
+          stopDrive();
+          renderSolverResult(result);
+          hint.textContent = result.message;
+          return;
+        }
+
+        renderSolverResult(result);
+        applyMemberColors(result.memberForces);
+
+        const failedMemberIndex = result.memberForces.findIndex((force) => {
+          const capacity = force >= 0 ? 90000 : 75000;
+          return Math.abs(force) / capacity > 1;
+        });
+
+        if (failedMemberIndex >= 0) {
+          const failedLine = result.lines[failedMemberIndex];
+          if (failedLine) {
+            failedLine.setAttribute("stroke", "#111");
+          }
+          showFailure(failedMemberIndex);
+          return;
+        }
+
+        const rearAxlePosition = testFrontX + rearAxleOffset;
+        if (rearAxlePosition >= 60) {
+          showSuccess(document.querySelector("#vehicleSelect").value);
+        }
+      }, 120);
+    });
+
+    document.querySelector("#restartButton").addEventListener("click", () => {
+      stopDrive();
+      const banner = document.querySelector("#resultBanner");
+      banner.classList.remove("visible", "failed");
+      document.querySelector("#buildModeButton").click();
+      hint.textContent = "Restarted in Build mode. The current bridge is unchanged.";
+    });
+
+    document.querySelector("#driveAnotherButton").addEventListener("click", () => {
+      stopDrive();
+      const banner = document.querySelector("#resultBanner");
+      banner.classList.remove("visible", "failed");
+      document.querySelector("#testModeButton").click();
+      hint.textContent = "Choose another vehicle or change the parked position.";
+    });
+
+    document.querySelector("#clearBridgeTool").addEventListener("click", () => {
+      snapshotBridge();
+      [...memberLines.querySelectorAll("line")].forEach((line) => {
+        if (!line.hasAttribute("data-deck-member")) {
+          line.remove();
+        }
+      });
+      [...jointCircles.querySelectorAll("circle")].forEach((circle) => {
+        if (!circle.hasAttribute("data-fixed") && !circle.hasAttribute("data-deck")) {
+          circle.remove();
+        }
+      });
+      firstMemberPoint = null;
+      setActiveTool("addMemberTool");
+      hint.textContent = "Bridge cleared. The deck joints and supports are unchanged.";
+      updateBridgeStatus();
+    });
+
+    document.querySelector("#undoButton").addEventListener("click", () => {
+      const snapshot = undoStack.pop();
+      if (!snapshot) {
+        hint.textContent = "Nothing to undo.";
+        return;
+      }
+      restoreBridge(snapshot);
+      hint.textContent = "Last bridge edit undone.";
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || activeTool !== "addMemberTool") {
+        return;
+      }
+
+      if (firstMemberPoint) {
+        firstMemberPoint = null;
+        memberOutline.setAttribute("opacity", "0");
+        hint.textContent = "Member placement detached. Choose a new first joint.";
+      } else {
+        hint.textContent = "Choose a first joint for the new member.";
+      }
+      event.preventDefault();
+    });
+
+    svg.addEventListener("click", (event) => {
+      if (suppressSvgClick) {
+        suppressSvgClick = false;
+        return;
+      }
+
+      if (activeTool === "erase-member") {
+        const line = event.target.closest("line");
+        if (line && memberLines.contains(line)) {
+          if (line.hasAttribute("data-deck-member")) {
+            hint.textContent = "Deck members cannot be erased.";
+            return;
+          }
+          snapshotBridge();
+          line.remove();
+          removeOrphanMemberJoints();
+          hint.textContent = "Member erased.";
+          updateBridgeStatus();
+        } else {
+          hint.textContent = "Click a member to erase it.";
+        }
+        return;
+      }
+
+      if (activeTool === "eraseMemberTool") {
+        const line = event.target.closest("line");
+        if (line && memberLines.contains(line)) {
+          if (line.hasAttribute("data-deck-member")) {
+            hint.textContent = "Deck members cannot be erased.";
+            return;
+          }
+          snapshotBridge();
+          line.remove();
+          removeOrphanMemberJoints();
+          hint.textContent = "Member erased.";
+          updateBridgeStatus();
+        } else {
+          hint.textContent = "Click a member to erase it.";
+        }
+        return;
+      }
+
+      if (activeTool !== "addMemberTool") {
+        return;
+      }
+
+      const point = snapToFootGrid(event.clientX, event.clientY);
+      if (!point) {
+        hint.textContent = "Joint placement is limited to the 60 ft by 25 ft grid.";
+        return;
+      }
+
+      if (!firstMemberPoint) {
+        firstMemberPoint = point;
+        hint.textContent = `First endpoint set at x = ${point.footX} ft, y = ${point.footY} ft. Choose the second endpoint.`;
+        return;
+      }
+
+      if (Math.abs(firstMemberPoint.svgX - point.svgX) < 1
+        && Math.abs(firstMemberPoint.svgY - point.svgY) < 1) {
+        hint.textContent = "A member needs two distinct endpoints.";
+        firstMemberPoint = point;
+        return;
+      }
+
+      const duplicate = [...memberLines.querySelectorAll("line")].some((line) => {
+        const a = [Number(line.getAttribute("x1")), Number(line.getAttribute("y1"))];
+        const b = [Number(line.getAttribute("x2")), Number(line.getAttribute("y2"))];
+        const p1 = [firstMemberPoint.svgX, firstMemberPoint.svgY];
+        const p2 = [point.svgX, point.svgY];
+        return (a[0] === p1[0] && a[1] === p1[1] && b[0] === p2[0] && b[1] === p2[1])
+          || (b[0] === p1[0] && b[1] === p1[1] && a[0] === p2[0] && a[1] === p2[1]);
+      });
+      if (duplicate) {
+        hint.textContent = "A member already exists between those joints.";
+        firstMemberPoint = point;
+        memberOutline.setAttribute("x1", point.svgX);
+        memberOutline.setAttribute("y1", point.svgY);
+        memberOutline.setAttribute("x2", point.svgX);
+        memberOutline.setAttribute("y2", point.svgY);
+        return;
+      }
+
+      snapshotBridge();
+      findOrAddJoint(firstMemberPoint);
+      findOrAddJoint(point);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", firstMemberPoint.svgX);
+      line.setAttribute("y1", firstMemberPoint.svgY);
+      line.setAttribute("x2", point.svgX);
+      line.setAttribute("y2", point.svgY);
+      line.setAttribute("stroke", "#8a5a36");
+      line.setAttribute("stroke-width", "10");
+      line.setAttribute("stroke-linecap", "round");
+      memberLines.appendChild(line);
+      hint.textContent = `Member added with joints at both endpoints: (${firstMemberPoint.footX}, ${firstMemberPoint.footY}) and (${point.footX}, ${point.footY}).`;
+      firstMemberPoint = point;
+      updateBridgeStatus();
+    });
+    updateBridgeStatus();
+  </script>
+</body>
+</html>
