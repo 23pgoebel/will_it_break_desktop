@@ -94,6 +94,19 @@ def solve_truss(nodes, members, front_x, vehicle_name):
     return Result(True, forces=values[:len(members)], reactions={
         "Pin X": values[len(members)], "Pin Y": values[len(members)+1], "Roller Y": values[len(members)+2]})
 
+def make_reference_truss():
+    """Return the six-panel, 10 ft tall Pratt truss used by spec validations."""
+    upper = [(float(x), 10.0) for x in range(0, 61, 10)]
+    nodes = set(DECK_NODES + upper)
+    members = [Member(DECK_NODES[i], DECK_NODES[i+1], True) for i in range(6)]
+    members += [Member(upper[i], upper[i+1]) for i in range(6)]
+    members += [Member((float(x), 0.0), (float(x), 10.0)) for x in range(0, 61, 10)]
+    diagonals = [((0,10),(10,0)), ((10,10),(20,0)), ((20,10),(30,0)),
+                 ((60,10),(50,0)), ((50,10),(40,0)), ((40,10),(30,0))]
+    members += [Member(tuple(map(float, a)), tuple(map(float, b))) for a, b in diagonals]
+    return nodes, members
+
+
 class BridgeApp:
     def __init__(self, root):
         self.root = root
@@ -184,6 +197,9 @@ class BridgeApp:
                           relief="flat", highlightthickness=1, highlightbackground=LINE, padx=9, pady=10, takefocus=True)
             b.pack(fill="x", padx=8, pady=4); self.tool_buttons[key] = b
         tk.Frame(self.tools, bg=LINE, height=1).pack(fill="x", padx=9, pady=8)
+        tk.Button(self.tools, text="Example Load", anchor="w", command=self.load_example, bg="white", fg=INK,
+                  relief="flat", highlightthickness=1, highlightbackground=LINE, padx=9, pady=10,
+                  takefocus=True).pack(fill="x", padx=8, pady=3)
         tk.Button(self.tools, text="↶  Undo", anchor="w", command=self.undo, bg="white", relief="flat", padx=9, pady=10, takefocus=True).pack(fill="x", padx=8, pady=3)
         tk.Button(self.tools, text="▧  Delete all", anchor="w", command=self.clear, bg="white", relief="flat", padx=9, pady=10, takefocus=True).pack(fill="x", padx=8, pady=3)
         tk.Label(self.tools, text="A  Add member\nE  Erase member\nD  Drag joint\nEsc  Detach\nCtrl+Z  Undo", bg="white", fg=MUTED, justify="left").pack(anchor="w", padx=12, pady=12)
@@ -223,6 +239,13 @@ class BridgeApp:
         if not self.undo_stack: self.hint.set("Nothing to undo."); return
         self.nodes, self.members = self.undo_stack.pop(); self.first_joint = None
         self._draw(); self._update_stats(); self.hint.set("Last bridge edit undone.")
+
+    def load_example(self):
+        if self.mode != "Build": return
+        self._snapshot()
+        self.nodes, self.members = make_reference_truss()
+        self._draw(); self._update_stats()
+        self.hint.set("Example Load: loaded the 60 ft, 10 ft tall six-panel Pratt validation truss. Undo restores the previous bridge.")
 
     def clear(self):
         if len(self.nodes) == 7 and len(self.members) == 6:

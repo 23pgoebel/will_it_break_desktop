@@ -34,3 +34,8 @@
 - Asked: Make the axle-load graphics bigger and make them look like wheels.
 - Changed: Enlarged the axle wheel markers and added layered tire, rim, hub, and center details.
 - Worked: Yes; axle markers now render as larger detailed wheels in the vehicle graphic.
+
+## 2026-11-24
+- Asked: Add an Example Load button that automatically builds the validation bridge.
+- Changed: Added an undoable Example Load action that creates the six-panel, 10 ft tall Pratt reference truss used by the validation cases.
+- Worked: Yes; the action loads all reference joints, chords, verticals, and diagonals into the bridge model.
